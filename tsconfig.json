@@ -1,0 +1,23 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@/types": ["types"],
+      "@/services": ["services"],
+      "@/store": ["store"],
+      "@/screens": ["screens"],
+      "@/components": ["components"],
+      "@/utils": ["utils"]
+    },
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["**/*.ts", "**/*.tsx", "src/**/*"],
+  "exclude": ["**/node_modules", "**/Pods", "**/*.test.ts", "**/*.test.tsx"]
+}
