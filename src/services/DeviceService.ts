@@ -108,24 +108,24 @@ class DeviceService {
         deviceId: basicInfo.deviceId,
         isRooted: environmentInfo.isRooted,
         isEmulator: environmentInfo.isEmulator,
-        screenResolution: systemInfo.screenResolution,
-        screenDensity: systemInfo.screenDensity,
-        networkType: networkInfo.type,
-        carrier: systemInfo.carrier,
-        totalMemory: systemInfo.totalMemory,
-        availableMemory: systemInfo.availableMemory,
-        totalStorage: systemInfo.totalStorage,
-        availableStorage: systemInfo.availableStorage,
-        cpuArch: systemInfo.cpuArch,
-        cpuCores: systemInfo.cpuCores,
-        appVersion: appInfo.version,
-        appVersionCode: appInfo.buildNumber,
-        deviceLanguage: systemInfo.deviceLanguage,
-        deviceTimezone: systemInfo.deviceTimezone,
-        batteryLevel: systemInfo.batteryLevel,
-        isCharging: systemInfo.isCharging,
-        ipAddress: networkInfo.ipAddress,
-        userAgent: systemInfo.userAgent,
+        ...(systemInfo.screenResolution && { screenResolution: systemInfo.screenResolution }),
+        ...(systemInfo.screenDensity && { screenDensity: systemInfo.screenDensity }),
+        ...(networkInfo.type && { networkType: networkInfo.type }),
+        ...(systemInfo.carrier && { carrier: systemInfo.carrier }),
+        ...(systemInfo.totalMemory && { totalMemory: systemInfo.totalMemory }),
+        ...(systemInfo.availableMemory && { availableMemory: systemInfo.availableMemory }),
+        ...(systemInfo.totalStorage && { totalStorage: systemInfo.totalStorage }),
+        ...(systemInfo.availableStorage && { availableStorage: systemInfo.availableStorage }),
+        ...(systemInfo.cpuArch && { cpuArch: systemInfo.cpuArch }),
+        ...(systemInfo.cpuCores && { cpuCores: systemInfo.cpuCores }),
+        ...(appInfo.version && { appVersion: appInfo.version }),
+        ...(appInfo.buildNumber && { appVersionCode: appInfo.buildNumber }),
+        ...(systemInfo.deviceLanguage && { deviceLanguage: systemInfo.deviceLanguage }),
+        ...(systemInfo.deviceTimezone && { deviceTimezone: systemInfo.deviceTimezone }),
+        ...(systemInfo.batteryLevel && { batteryLevel: systemInfo.batteryLevel }),
+        ...(systemInfo.isCharging !== undefined && { isCharging: systemInfo.isCharging }),
+        ...(networkInfo.ipAddress && { ipAddress: networkInfo.ipAddress }),
+        ...(systemInfo.userAgent && { userAgent: systemInfo.userAgent }),
         extraInfo: JSON.stringify({
           deviceFingerprint: environmentInfo.deviceFingerprint,
           detectionDetails: environmentInfo.detectionDetails,
@@ -212,7 +212,7 @@ class DeviceService {
 
       // Collect device info for analysis
       const [brand, model, systemName, isEmulator] = await Promise.all([
-        DeviceInfo.getBrand().catch((_error) => {
+        DeviceInfo.getBrand().catch((_error: any) => {
           detectionDetails.suspiciousIndicators.push('detection-error');
           return 'Unknown';
         }),
@@ -389,21 +389,35 @@ class DeviceService {
       const totalStorageMB = totalStorage ? Math.round(totalStorage / (1024 * 1024)) : undefined;
       const availableStorageMB = freeStorage ? Math.round(freeStorage / (1024 * 1024)) : undefined;
 
-      return {
-        totalMemory: totalMemoryMB,
-        availableMemory: availableMemoryMB,
-        totalStorage: totalStorageMB,
-        availableStorage: availableStorageMB,
-        carrier: carrier || undefined,
-        batteryLevel: batteryLevel ? Math.round(batteryLevel * 100) : undefined,
-        isCharging: isCharging || false,
-        deviceLanguage: (DeviceInfo as any).getDeviceLocale ? 
-          await (DeviceInfo as any).getDeviceLocale().catch(() => undefined) : undefined,
-        deviceTimezone: (DeviceInfo as any).getTimezone ? 
-          await (DeviceInfo as any).getTimezone().catch(() => undefined) : undefined,
-        userAgent: (DeviceInfo as any).getUserAgent ? 
-          await (DeviceInfo as any).getUserAgent().catch(() => undefined) : undefined,
-      };
+      const result: any = {};
+      
+      if (totalMemoryMB) result.totalMemory = totalMemoryMB;
+      if (availableMemoryMB) result.availableMemory = availableMemoryMB;
+      if (totalStorageMB) result.totalStorage = totalStorageMB;
+      if (availableStorageMB) result.availableStorage = availableStorageMB;
+      if (carrier) result.carrier = carrier;
+      if (batteryLevel) result.batteryLevel = Math.round(batteryLevel * 100);
+      if (isCharging !== undefined) result.isCharging = isCharging;
+      
+      // Try to get additional device info
+      try {
+        if ((DeviceInfo as any).getDeviceLocale) {
+          const locale = await (DeviceInfo as any).getDeviceLocale().catch(() => undefined);
+          if (locale) result.deviceLanguage = locale;
+        }
+        if ((DeviceInfo as any).getTimezone) {
+          const timezone = await (DeviceInfo as any).getTimezone().catch(() => undefined);
+          if (timezone) result.deviceTimezone = timezone;
+        }
+        if ((DeviceInfo as any).getUserAgent) {
+          const userAgent = await (DeviceInfo as any).getUserAgent().catch(() => undefined);
+          if (userAgent) result.userAgent = userAgent;
+        }
+      } catch (error) {
+        // Ignore errors for optional fields
+      }
+      
+      return result;
     } catch (error) {
       console.error('Failed to collect system info:', error);
       return {};
@@ -552,24 +566,24 @@ class DeviceService {
       deviceId: basicInfo.deviceId,
       isRooted: environmentInfo.isRooted,
       isEmulator: environmentInfo.isEmulator,
-      screenResolution: systemInfo.screenResolution,
-      screenDensity: systemInfo.screenDensity,
-      networkType: networkInfo.type,
-      carrier: systemInfo.carrier,
-      totalMemory: systemInfo.totalMemory,
-      availableMemory: systemInfo.availableMemory,
-      totalStorage: systemInfo.totalStorage,
-      availableStorage: systemInfo.availableStorage,
-      cpuArch: systemInfo.cpuArch,
-      cpuCores: systemInfo.cpuCores,
-      appVersion: appInfo.version,
-      appVersionCode: appInfo.buildNumber,
-      deviceLanguage: systemInfo.deviceLanguage,
-      deviceTimezone: systemInfo.deviceTimezone,
-      batteryLevel: systemInfo.batteryLevel,
-      isCharging: systemInfo.isCharging,
-      ipAddress: networkInfo.ipAddress,
-      userAgent: systemInfo.userAgent,
+      ...(systemInfo.screenResolution && { screenResolution: systemInfo.screenResolution }),
+      ...(systemInfo.screenDensity && { screenDensity: systemInfo.screenDensity }),
+      ...(networkInfo.type && { networkType: networkInfo.type }),
+      ...(systemInfo.carrier && { carrier: systemInfo.carrier }),
+      ...(systemInfo.totalMemory && { totalMemory: systemInfo.totalMemory }),
+      ...(systemInfo.availableMemory && { availableMemory: systemInfo.availableMemory }),
+      ...(systemInfo.totalStorage && { totalStorage: systemInfo.totalStorage }),
+      ...(systemInfo.availableStorage && { availableStorage: systemInfo.availableStorage }),
+      ...(systemInfo.cpuArch && { cpuArch: systemInfo.cpuArch }),
+      ...(systemInfo.cpuCores && { cpuCores: systemInfo.cpuCores }),
+      ...(appInfo.version && { appVersion: appInfo.version }),
+      ...(appInfo.buildNumber && { appVersionCode: appInfo.buildNumber }),
+      ...(systemInfo.deviceLanguage && { deviceLanguage: systemInfo.deviceLanguage }),
+      ...(systemInfo.deviceTimezone && { deviceTimezone: systemInfo.deviceTimezone }),
+      ...(systemInfo.batteryLevel && { batteryLevel: systemInfo.batteryLevel }),
+      ...(systemInfo.isCharging !== undefined && { isCharging: systemInfo.isCharging }),
+      ...(networkInfo.ipAddress && { ipAddress: networkInfo.ipAddress }),
+      ...(systemInfo.userAgent && { userAgent: systemInfo.userAgent }),
       extraInfo: JSON.stringify({
         deviceFingerprint: environmentInfo.deviceFingerprint,
         detectionDetails: environmentInfo.detectionDetails,

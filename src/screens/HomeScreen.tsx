@@ -33,14 +33,11 @@ import {
   selectAdLoading,
   selectAdError,
   fetchUserRevenue,
-  requestAd,
-  reportAdShow,
-  reportAdClick,
-  reportAdComplete,
   clearError
 } from '../store/slices/adSlice';
 import { AdType } from '../types';
 import { ENV_CONFIG } from '../config/env';
+import IntegratedAdService, { AdEventCallbacks } from '../services/IntegratedAdService';
 
 // Ad type configuration for buttons
 const AD_TYPE_CONFIG = [
@@ -93,6 +90,8 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user) {
       loadUserRevenue();
+      // Set user for integrated ad service
+      IntegratedAdService.setCurrentUser(user);
     }
   }, [isAuthenticated, user]);
 
@@ -124,7 +123,60 @@ const HomeScreen: React.FC = () => {
     setRefreshing(false);
   }, [loadUserRevenue]);
 
-  // Handle ad button press
+  // Create ad event callbacks
+  const createAdCallbacks = useCallback((adType: AdType): AdEventCallbacks => ({
+    onAdLoaded: (adId: string, adType: AdType) => {
+      console.log(`Ad loaded: ${adType} - ${adId}`);
+    },
+    
+    onAdShown: (adId: string, adType: AdType) => {
+      console.log(`Ad shown: ${adType} - ${adId}`);
+    },
+    
+    onAdClicked: (adId: string, adType: AdType) => {
+      console.log(`Ad clicked: ${adType} - ${adId}`);
+    },
+    
+    onAdCompleted: (adId: string, adType: AdType, reward: number) => {
+      console.log(`Ad completed: ${adType} - ${adId}, reward: ${reward}`);
+      setLoadingAdType(null);
+      
+      if (reward > 0) {
+        Alert.alert(
+          '恭喜获得奖励！',
+          `您观看${getAdTypeDisplayName(adType)}获得了 ¥${reward.toFixed(2)} 奖励！`,
+          [{ text: '确定', onPress: () => loadUserRevenue() }]
+        );
+      } else {
+        Alert.alert('广告播放完成', '感谢您的观看！', [
+          { text: '确定', onPress: () => loadUserRevenue() }
+        ]);
+      }
+    },
+    
+    onAdSkipped: (adId: string, adType: AdType) => {
+      console.log(`Ad skipped: ${adType} - ${adId}`);
+      setLoadingAdType(null);
+      Alert.alert('广告已跳过', '您跳过了广告播放');
+    },
+    
+    onAdClosed: (adId: string, adType: AdType) => {
+      console.log(`Ad closed: ${adType} - ${adId}`);
+      setLoadingAdType(null);
+    },
+    
+    onAdError: (adId: string, adType: AdType, error: Error) => {
+      console.error(`Ad error: ${adType} - ${adId}:`, error);
+      setLoadingAdType(null);
+      Alert.alert(
+        '广告加载失败',
+        `${getAdTypeDisplayName(adType)}加载失败，请稍后重试。\n错误信息：${error.message}`,
+        [{ text: '确定' }]
+      );
+    },
+  }), [loadUserRevenue]);
+
+  // Handle ad button press with integrated service
   const handleAdButtonPress = useCallback(async (adType: AdType) => {
     if (!user || !isAuthenticated) {
       Alert.alert('错误', '请先登录');
@@ -136,87 +188,45 @@ const HomeScreen: React.FC = () => {
       return;
     }
 
+    // Check if SDK is ready
+    const isSDKReady = await IntegratedAdService.isSDKReady();
+    if (!isSDKReady) {
+      Alert.alert('错误', 'SDK未准备就绪，请稍后重试');
+      return;
+    }
+
     setLoadingAdType(adType);
+    const callbacks = createAdCallbacks(adType);
 
     try {
-      // 1. Request ad from server
-      const adResponse = await dispatch(requestAd({
-        userId: user.userId,
-        appKey: user.appKey,
-        adType,
-        deviceType: 'android', // TODO: Get from device info
-      })).unwrap();
-
-      // 2. Report ad show
-      await dispatch(reportAdShow({
-        userId: user.userId,
-        appKey: user.appKey,
-        adId: adResponse.adId,
-        adType: adResponse.adType,
-        showTime: Date.now(),
-      })).unwrap();
-
-      // 3. Simulate ad playback (in real implementation, this would be handled by Pangle SDK)
-      const playDuration = getSimulatedPlayDuration(adType);
-      const isClicked = Math.random() > 0.7; // 30% click rate simulation
-
-      // 4. Report ad click if clicked
-      if (isClicked) {
-        await dispatch(reportAdClick({
-          userId: user.userId,
-          appKey: user.appKey,
-          adId: adResponse.adId,
-          adType: adResponse.adType,
-          clickTime: Date.now(),
-        })).unwrap();
+      switch (adType) {
+        case AdType.SPLASH:
+          await IntegratedAdService.loadAndShowSplashAd(callbacks);
+          break;
+        case AdType.REWARD_VIDEO:
+          await IntegratedAdService.loadAndShowRewardVideoAd(callbacks);
+          break;
+        case AdType.INTERSTITIAL:
+          await IntegratedAdService.loadAndShowInterstitialAd(callbacks);
+          break;
+        case AdType.BANNER:
+          await IntegratedAdService.loadAndShowBannerAd(callbacks);
+          break;
+        default:
+          throw new Error(`Unsupported ad type: ${adType}`);
       }
-
-      // 5. Report ad complete and get reward
-      const rewardAmount = await dispatch(reportAdComplete({
-        userId: user.userId,
-        appKey: user.appKey,
-        adId: adResponse.adId,
-        adType: adResponse.adType,
-        playDuration,
-        isClicked: isClicked ? '1' : '0',
-        stayDuration: playDuration + Math.floor(Math.random() * 5),
-        completeTime: Date.now(),
-      })).unwrap();
-
-      // Show success message
-      Alert.alert(
-        '广告播放完成',
-        `恭喜获得 ${typeof rewardAmount === 'number' ? rewardAmount.toFixed(2) : adResponse.expectedReward.toFixed(2)} 元奖励！`,
-        [{ text: '确定', onPress: () => loadUserRevenue() }]
-      );
-
     } catch (error: any) {
-      console.error(`Failed to play ${adType} ad:`, error);
+      console.error(`Failed to load ${adType} ad:`, error);
+      setLoadingAdType(null);
       Alert.alert(
-        '广告播放失败',
-        error.message || '请稍后重试',
+        '广告加载失败',
+        `${getAdTypeDisplayName(adType)}加载失败，请检查网络连接后重试。`,
         [{ text: '确定' }]
       );
-    } finally {
-      setLoadingAdType(null);
     }
-  }, [dispatch, user, isAuthenticated, loadingAdType, loadUserRevenue]);
+  }, [user, isAuthenticated, loadingAdType, createAdCallbacks]);
 
-  // Get simulated play duration based on ad type
-  const getSimulatedPlayDuration = (adType: AdType): number => {
-    switch (adType) {
-      case AdType.SPLASH:
-        return 3; // 3 seconds
-      case AdType.REWARD_VIDEO:
-        return 30; // 30 seconds
-      case AdType.INTERSTITIAL:
-        return 5; // 5 seconds
-      case AdType.BANNER:
-        return 10; // 10 seconds
-      default:
-        return 5;
-    }
-  };
+
 
   // Get ad type display name
   const getAdTypeDisplayName = (adType: AdType): string => {

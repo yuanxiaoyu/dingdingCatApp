@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { AuthState, User, AuthTokens, LoginRequest, RegisterRequest, RefreshTokenRequest, LoginResponse } from '../../types';
-import { AuthService } from '../../services/AuthService';
 
 // Initial state
 const initialState: AuthState = {
@@ -8,16 +7,19 @@ const initialState: AuthState = {
   tokens: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   error: null,
 };
+
+// Import the singleton service instance
+import authService from '../../services/AuthService';
 
 // Async thunks for auth operations
 export const wechatLogin = createAsyncThunk(
   'auth/wechatLogin',
-  async (request: LoginRequest, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const authService = new AuthService();
-      const response = await authService.wechatLogin(request);
+      const response = await authService.wechatLogin();
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Login failed');
@@ -29,7 +31,6 @@ export const wechatRegister = createAsyncThunk(
   'auth/wechatRegister',
   async (request: RegisterRequest, { rejectWithValue }) => {
     try {
-      const authService = new AuthService();
       const response = await authService.autoRegister(request);
       return response;
     } catch (error: any) {
@@ -40,11 +41,18 @@ export const wechatRegister = createAsyncThunk(
 
 export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
-  async (request: RefreshTokenRequest, { rejectWithValue }) => {
+  async (request?: RefreshTokenRequest, { rejectWithValue }) => {
     try {
-      const authService = new AuthService();
-      const response = await authService.refreshToken(request);
-      return response;
+      const newToken = await authService.refreshToken(request);
+      if (newToken) {
+        // Return the new token in the expected format
+        return {
+          accessToken: newToken,
+          tokenType: 'Bearer',
+          expiresIn: 1800,
+        };
+      }
+      throw new Error('Token refresh failed');
     } catch (error: any) {
       return rejectWithValue(error.message || 'Token refresh failed');
     }
@@ -55,8 +63,10 @@ export const getUserInfo = createAsyncThunk(
   'auth/getUserInfo',
   async (_, { rejectWithValue }) => {
     try {
-      const authService = new AuthService();
       const response = await authService.getUserInfo();
+      if (!response) {
+        throw new Error('No user info available');
+      }
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to get user info');
@@ -68,11 +78,26 @@ export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
-      const authService = new AuthService();
       await authService.logout();
       return true;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Logout failed');
+    }
+  }
+);
+
+export const checkAuthState = createAsyncThunk(
+  'auth/checkAuthState',
+  async (_, { rejectWithValue }) => {
+    try {
+      const isAuthenticated = await authService.isAuthenticated();
+      if (isAuthenticated) {
+        const userInfo = await authService.getUserInfo();
+        return { isAuthenticated: true, user: userInfo };
+      }
+      return { isAuthenticated: false, user: null };
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to check auth state');
     }
   }
 );
@@ -101,6 +126,9 @@ const authSlice = createSlice({
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
+    },
+    setInitialized: (state, action: PayloadAction<boolean>) => {
+      state.isInitialized = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -233,11 +261,32 @@ const authSlice = createSlice({
         state.tokens = null;
         state.isAuthenticated = false;
       });
+
+    // Check Auth State
+    builder
+      .addCase(checkAuthState.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(checkAuthState.fulfilled, (state, action: PayloadAction<{ isAuthenticated: boolean; user: User | null }>) => {
+        state.isLoading = false;
+        state.isInitialized = true;
+        state.isAuthenticated = action.payload.isAuthenticated;
+        state.user = action.payload.user;
+        state.error = null;
+      })
+      .addCase(checkAuthState.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isInitialized = true;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload as string;
+      });
   },
 });
 
 // Export actions
-export const { setUser, setTokens, clearAuth, clearError, setLoading } = authSlice.actions;
+export const { setUser, setTokens, clearAuth, clearError, setLoading, setInitialized } = authSlice.actions;
 
 // Export selectors
 export const selectAuth = (state: { auth: AuthState }) => state.auth;

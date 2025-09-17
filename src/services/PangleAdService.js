@@ -3,11 +3,61 @@
  * Pangle Ad Service
  */
 
-import { NativeModules } from 'react-native';
+import { NativeModules, NativeEventEmitter } from 'react-native';
 
 const { PangleAdModule } = NativeModules;
 
+// Create event emitter for native ad events
+const PangleAdEventEmitter = PangleAdModule ? new NativeEventEmitter(PangleAdModule) : null;
+
 class PangleAdService {
+  // Event listeners storage
+  static eventListeners = new Map();
+
+  /**
+   * Add event listener for ad events
+   * @param {string} eventType - Event type (adLoaded, adShown, adClicked, etc.)
+   * @param {Function} listener - Event listener function
+   * @returns {Object} Subscription object with remove method
+   */
+  static addEventListener(eventType, listener) {
+    if (!PangleAdEventEmitter) {
+      console.warn('PangleAdEventEmitter not available');
+      return { remove: () => {} };
+    }
+
+    const subscription = PangleAdEventEmitter.addListener(eventType, listener);
+    
+    // Store listener for cleanup
+    if (!this.eventListeners.has(eventType)) {
+      this.eventListeners.set(eventType, []);
+    }
+    this.eventListeners.get(eventType).push(subscription);
+
+    return subscription;
+  }
+
+  /**
+   * Remove all event listeners for a specific event type
+   * @param {string} eventType - Event type to remove listeners for
+   */
+  static removeEventListeners(eventType) {
+    const listeners = this.eventListeners.get(eventType);
+    if (listeners) {
+      listeners.forEach(subscription => subscription.remove());
+      this.eventListeners.delete(eventType);
+    }
+  }
+
+  /**
+   * Remove all event listeners
+   */
+  static removeAllEventListeners() {
+    this.eventListeners.forEach((listeners, eventType) => {
+      listeners.forEach(subscription => subscription.remove());
+    });
+    this.eventListeners.clear();
+  }
   /**
    * 初始化穿山甲 SDK (第一步)
    * Initialize Pangle SDK (Step 1)

@@ -24,6 +24,6 @@ module.exports = {
     '^@/config$': '<rootDir>/src/config',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-.*|@react-native-async-storage|react-native-wechat-lib|react-native-device-info|react-native-keychain|react-native-sqlite-storage|react-redux|@reduxjs|immer)/)',
+    'node_modules/(?!(react-native|@react-native|react-native-.*|@react-native-async-storage|react-native-wechat-lib|react-native-device-info|react-native-keychain|react-native-sqlite-storage|react-redux|@reduxjs|immer|@react-navigation)/)',
   ],
 };

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { ConfigState, AppConfig, AdConfig, RiskConfig, ChannelConfigResponse } from '../../types';
-import { ConfigService } from '../../services/ConfigService';
+import configService from '../../services/ConfigService';
 
 // Initial state
 const initialState: ConfigState = {
@@ -18,7 +18,6 @@ export const fetchAppConfig = createAsyncThunk(
   'config/fetchAppConfig',
   async (appKey: string, { rejectWithValue }) => {
     try {
-      const configService = new ConfigService();
       const response = await configService.getAppConfig(appKey);
       return response;
     } catch (error: any) {
@@ -31,7 +30,6 @@ export const fetchAdConfig = createAsyncThunk(
   'config/fetchAdConfig',
   async (appKey: string, { rejectWithValue }) => {
     try {
-      const configService = new ConfigService();
       const response = await configService.getAdConfig(appKey);
       return response;
     } catch (error: any) {
@@ -44,7 +42,6 @@ export const fetchRiskConfig = createAsyncThunk(
   'config/fetchRiskConfig',
   async (appKey: string, { rejectWithValue }) => {
     try {
-      const configService = new ConfigService();
       const response = await configService.getRiskConfig(appKey);
       return response;
     } catch (error: any) {
@@ -57,7 +54,6 @@ export const fetchChannelConfig = createAsyncThunk(
   'config/fetchChannelConfig',
   async (appKey: string, { rejectWithValue }) => {
     try {
-      const configService = new ConfigService();
       const response = await configService.getChannelConfig(appKey);
       return response;
     } catch (error: any) {
@@ -99,7 +95,6 @@ export const checkConfigVersions = createAsyncThunk(
   async (appKey: string, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as { config: ConfigState };
-      const configService = new ConfigService();
       
       // Check if configs need updating based on version
       const currentVersions = {

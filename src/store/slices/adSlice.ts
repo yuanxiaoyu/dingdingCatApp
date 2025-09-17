@@ -14,7 +14,7 @@ import {
   AdHistoryRequest,
   AdType 
 } from '../../types';
-import { AdService } from '../../services/AdService';
+import adService from '../../services/AdService';
 
 // Initial state
 const initialState: AdState = {
@@ -30,7 +30,6 @@ export const requestAd = createAsyncThunk(
   'ad/requestAd',
   async (request: AdRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.requestAd(request);
       return response;
     } catch (error: any) {
@@ -43,7 +42,6 @@ export const reportAdShow = createAsyncThunk(
   'ad/reportAdShow',
   async (request: AdShowRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.reportAdShow(request);
       return response;
     } catch (error: any) {
@@ -56,7 +54,6 @@ export const reportAdClick = createAsyncThunk(
   'ad/reportAdClick',
   async (request: AdClickRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.reportAdClick(request);
       return response;
     } catch (error: any) {
@@ -69,7 +66,6 @@ export const reportAdComplete = createAsyncThunk(
   'ad/reportAdComplete',
   async (request: AdCompleteRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.reportAdComplete(request);
       return response;
     } catch (error: any) {
@@ -82,7 +78,6 @@ export const reportAdSkip = createAsyncThunk(
   'ad/reportAdSkip',
   async (request: AdSkipRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.reportAdSkip(request);
       return response;
     } catch (error: any) {
@@ -95,7 +90,6 @@ export const reportAdClose = createAsyncThunk(
   'ad/reportAdClose',
   async (request: AdCloseRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.reportAdClose(request);
       return response;
     } catch (error: any) {
@@ -108,7 +102,6 @@ export const fetchUserRevenue = createAsyncThunk(
   'ad/fetchUserRevenue',
   async (params: { userId: number; appKey: string }, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.getUserRevenue(params.userId);
       return response;
     } catch (error: any) {
@@ -121,7 +114,6 @@ export const fetchAdHistory = createAsyncThunk(
   'ad/fetchAdHistory',
   async (request: AdHistoryRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.getAdHistory(request);
       return response;
     } catch (error: any) {
@@ -134,7 +126,6 @@ export const loadMoreHistory = createAsyncThunk(
   'ad/loadMoreHistory',
   async (request: AdHistoryRequest, { rejectWithValue }) => {
     try {
-      const adService = new AdService();
       const response = await adService.getAdHistory(request);
       return response;
     } catch (error: any) {

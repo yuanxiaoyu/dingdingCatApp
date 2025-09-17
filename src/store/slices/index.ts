@@ -1,8 +1,8 @@
 // Redux Slices Export Index
-export { default as authSlice } from './authSlice';
-export { default as configSlice } from './configSlice';
-export { default as adSlice } from './adSlice';
-export { default as syncSlice } from './syncSlice';
+export { default as authReducer } from './authSlice';
+export { default as configReducer } from './configSlice';
+export { default as adReducer } from './adSlice';
+export { default as syncReducer } from './syncSlice';
 
 // Export all actions and selectors
 export * from './authSlice';

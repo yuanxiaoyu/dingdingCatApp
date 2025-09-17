@@ -57,7 +57,7 @@ class SyncService {
   private database: SQLite.SQLiteDatabase | null = null;
   private syncConfig: SyncConfig;
   private isSyncing = false;
-  private syncTimer: NodeJS.Timeout | null = null;
+  private syncTimer: ReturnType<typeof setInterval> | null = null;
   private networkUnsubscribe: (() => void) | null = null;
   private isNetworkConnected = false;
 
@@ -94,12 +94,10 @@ class SyncService {
       SQLite.DEBUG(false);
       SQLite.enablePromise(true);
 
-      SQLite.openDatabase(
-        DB_CONFIG.name,
-        DB_CONFIG.version,
-        DB_CONFIG.displayName,
-        DB_CONFIG.size
-      )
+      SQLite.openDatabase({
+        name: DB_CONFIG.name,
+        location: 'default',
+      })
         .then((db) => {
           this.database = db;
           return this.createTables();

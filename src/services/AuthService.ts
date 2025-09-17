@@ -1,7 +1,18 @@
-import * as WeChat from 'react-native-wechat-lib';
-import * as Keychain from 'react-native-keychain';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// Import WeChat with proper error handling
+let WeChat: any = null;
+try {
+  WeChat = require('react-native-wechat-lib');
+} catch (error) {
+  console.warn('WeChat SDK not available:', error);
+  // Create a mock WeChat object for development
+  WeChat = {
+    registerApp: () => Promise.resolve(false),
+    isWXAppInstalled: () => Promise.resolve(false),
+    sendAuthRequest: () => Promise.reject(new Error('WeChat not available')),
+  };
+}
 import apiClient from './apiClient';
+import persistenceService from './PersistenceService';
 import { ENV_CONFIG } from '../config/env';
 import { 
   User, 
@@ -33,9 +44,21 @@ const STORAGE_KEYS = {
  */
 class AuthService {
   private isWeChatRegistered = false;
+  private initializationPromise: Promise<void> | null = null;
 
   constructor() {
-    this.initializeWeChat();
+    // Don't initialize WeChat in constructor to avoid blocking
+    // Initialize lazily when needed
+  }
+
+  /**
+   * Ensure WeChat is initialized (lazy initialization)
+   */
+  private async ensureWeChatInitialized(): Promise<void> {
+    if (this.initializationPromise === null) {
+      this.initializationPromise = this.initializeWeChat();
+    }
+    return this.initializationPromise;
   }
 
   /**
@@ -45,10 +68,31 @@ class AuthService {
     try {
       if (!ENV_CONFIG.WECHAT_APP_ID) {
         console.warn('WeChat App ID not configured');
+        this.isWeChatRegistered = false;
         return;
       }
 
-      const isRegistered = await WeChat.registerApp(ENV_CONFIG.WECHAT_APP_ID, '');
+      // Check if WeChat SDK is available
+      if (!WeChat || typeof WeChat.registerApp !== 'function') {
+        console.warn('WeChat SDK is not properly initialized, using mock mode');
+        this.isWeChatRegistered = false;
+        return;
+      }
+
+      // Skip WeChat initialization in development if using placeholder ID
+      if (ENV_CONFIG.WECHAT_APP_ID.includes('_dev_') || ENV_CONFIG.WECHAT_APP_ID.includes('_prod_')) {
+        console.warn('Using placeholder WeChat App ID, skipping WeChat initialization');
+        this.isWeChatRegistered = false;
+        return;
+      }
+
+      // Add timeout for WeChat registration
+      const registrationPromise = WeChat.registerApp(ENV_CONFIG.WECHAT_APP_ID, '');
+      const timeoutPromise = new Promise<boolean>((_, reject) => {
+        setTimeout(() => reject(new Error('WeChat registration timeout')), 5000);
+      });
+
+      const isRegistered = await Promise.race([registrationPromise, timeoutPromise]);
       this.isWeChatRegistered = isRegistered;
       
       if (ENV_CONFIG.DEBUG_MODE) {
@@ -65,11 +109,72 @@ class AuthService {
    */
   public async isWeChatAvailable(): Promise<boolean> {
     try {
+      // Ensure WeChat is initialized first
+      await this.ensureWeChatInitialized();
+
+      // Check if WeChat SDK is available
+      if (!WeChat || typeof WeChat.isWXAppInstalled !== 'function') {
+        console.warn('WeChat SDK is not properly initialized');
+        return false;
+      }
+      
       return await WeChat.isWXAppInstalled();
     } catch (error) {
       console.error('Error checking WeChat availability:', error);
       return false;
     }
+  }
+
+  /**
+   * Initialize authentication service
+   */
+  public async initializeAuth(): Promise<boolean> {
+    try {
+      // Initialize WeChat SDK
+      await this.ensureWeChatInitialized();
+
+      // Check if user is already authenticated
+      const isAuthenticated = await this.isAuthenticated();
+      
+      if (ENV_CONFIG.DEBUG_MODE) {
+        console.log('Auth service initialized, authenticated:', isAuthenticated);
+      }
+
+      return isAuthenticated;
+    } catch (error) {
+      console.error('Failed to initialize auth service:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mock WeChat login for development
+   */
+  private async mockWeChatLogin(): Promise<LoginResponse> {
+    console.log('Using mock WeChat login for development');
+    
+    // Return a mock user for development
+    const mockUser: LoginResponse = {
+      userId: 12345,
+      userName: 'dev_user',
+      nickName: '开发测试用户',
+      avatar: 'https://via.placeholder.com/100',
+      phoneNumber: '13800138000',
+      email: 'dev@example.com',
+      sex: '1',
+      wechatOpenId: 'mock_openid_12345',
+      registerChannel: 'wechat',
+      appKey: ENV_CONFIG.APP_KEY,
+      registerTime: new Date().toISOString(),
+      lastLoginTime: new Date().toISOString(),
+      accessToken: 'mock_access_token_' + Date.now(),
+      tokenType: 'Bearer',
+      expiresIn: 7200,
+    };
+
+    // Store mock auth data
+    await this.storeAuthData(mockUser);
+    return mockUser;
   }
 
   /**
@@ -83,6 +188,11 @@ class AuthService {
     const isInstalled = await this.isWeChatAvailable();
     if (!isInstalled) {
       throw new Error('WeChat is not installed');
+    }
+
+    // Check if WeChat SDK is available
+    if (!WeChat || typeof WeChat.sendAuthRequest !== 'function') {
+      throw new Error('WeChat SDK is not properly initialized');
     }
 
     try {
@@ -116,6 +226,15 @@ class AuthService {
    */
   public async wechatLogin(): Promise<LoginResponse> {
     try {
+      // Ensure WeChat is initialized first
+      await this.ensureWeChatInitialized();
+
+      // In development mode with placeholder WeChat ID, return mock login
+      if (ENV_CONFIG.DEBUG_MODE && (ENV_CONFIG.WECHAT_APP_ID.includes('_dev_') || ENV_CONFIG.WECHAT_APP_ID.includes('_prod_'))) {
+        console.warn('Using mock WeChat login for development');
+        return this.mockWeChatLogin();
+      }
+
       // Step 1: Get WeChat authorization code
       const authCode = await this.getWeChatAuthCode();
 
@@ -157,7 +276,9 @@ class AuthService {
   /**
    * Auto-register new user with WeChat info
    */
-  public async autoRegister(authCode: string): Promise<LoginResponse> {
+  public async autoRegister(request: RegisterRequest | string): Promise<LoginResponse> {
+    // Handle both old string parameter and new RegisterRequest parameter
+    const authCode = typeof request === 'string' ? request : request.code;
     try {
       const registerRequest: RegisterRequest = {
         appKey: ENV_CONFIG.APP_KEY,
@@ -196,16 +317,13 @@ class AuthService {
    */
   private async storeAuthData(loginData: LoginResponse): Promise<void> {
     try {
-      // Store tokens securely in Keychain
-      const tokens: AuthTokens = {
-        accessToken: loginData.accessToken,
-        tokenType: loginData.tokenType,
-        expiresIn: loginData.expiresIn,
-      };
+      // Store tokens securely using persistence service
+      await persistenceService.storeAccessToken(loginData.accessToken);
+      if (loginData.refreshToken) {
+        await persistenceService.storeRefreshToken(loginData.refreshToken);
+      }
 
-      await this.storeTokensSecurely(tokens);
-
-      // Store user info in AsyncStorage
+      // Store user info using persistence service
       const userInfo: User = {
         userId: loginData.userId,
         userName: loginData.userName,
@@ -222,11 +340,16 @@ class AuthService {
       };
 
       await Promise.all([
-        AsyncStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(userInfo)),
-        AsyncStorage.setItem(STORAGE_KEYS.USER_ID, loginData.userId.toString()),
-        AsyncStorage.setItem(STORAGE_KEYS.LAST_LOGIN_TIME, new Date().toISOString()),
+        persistenceService.storeUserData('user_info', userInfo),
+        persistenceService.storeUserData('user_id', loginData.userId.toString()),
+        persistenceService.storeUserData('last_login_time', new Date().toISOString()),
         // Also store in apiClient for immediate use
-        apiClient.storeTokens(tokens),
+        apiClient.storeTokens({
+          accessToken: loginData.accessToken,
+          refreshToken: loginData.refreshToken,
+          tokenType: loginData.tokenType,
+          expiresIn: loginData.expiresIn,
+        }),
         apiClient.storeUserId(loginData.userId.toString()),
       ]);
 
@@ -240,53 +363,19 @@ class AuthService {
   }
 
   /**
-   * Store tokens securely using Keychain
-   */
-  private async storeTokensSecurely(tokens: AuthTokens): Promise<void> {
-    try {
-      await Promise.all([
-        Keychain.setInternetCredentials(
-          KEYCHAIN_KEYS.ACCESS_TOKEN,
-          KEYCHAIN_KEYS.ACCESS_TOKEN,
-          tokens.accessToken,
-          {
-            service: KEYCHAIN_SERVICE,
-            accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE,
-            accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-          }
-        ),
-        tokens.refreshToken ? Keychain.setInternetCredentials(
-          KEYCHAIN_KEYS.REFRESH_TOKEN,
-          KEYCHAIN_KEYS.REFRESH_TOKEN,
-          tokens.refreshToken,
-          {
-            service: KEYCHAIN_SERVICE,
-            accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE,
-            accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-          }
-        ) : Promise.resolve(),
-      ]);
-    } catch (error) {
-      console.error('Error storing tokens in Keychain:', error);
-      // Fallback to AsyncStorage if Keychain fails
-      await apiClient.storeTokens(tokens);
-    }
-  }
-
-  /**
-   * Get stored tokens from Keychain
+   * Get stored tokens using persistence service
    */
   private async getStoredTokensSecurely(): Promise<AuthTokens | null> {
     try {
-      const [accessTokenResult, refreshTokenResult] = await Promise.all([
-        Keychain.getInternetCredentials(KEYCHAIN_KEYS.ACCESS_TOKEN),
-        Keychain.getInternetCredentials(KEYCHAIN_KEYS.REFRESH_TOKEN).catch(() => null),
+      const [accessToken, refreshToken] = await Promise.all([
+        persistenceService.getAccessToken(),
+        persistenceService.getRefreshToken(),
       ]);
 
-      if (accessTokenResult && accessTokenResult.password) {
+      if (accessToken) {
         return {
-          accessToken: accessTokenResult.password,
-          refreshToken: refreshTokenResult && refreshTokenResult.password ? refreshTokenResult.password : undefined,
+          accessToken,
+          refreshToken: refreshToken || undefined,
           tokenType: 'Bearer',
           expiresIn: 1800, // Default expiry
         };
@@ -294,7 +383,7 @@ class AuthService {
 
       return null;
     } catch (error) {
-      console.error('Error getting tokens from Keychain:', error);
+      console.error('Error getting tokens from persistence service:', error);
       return null;
     }
   }
@@ -302,10 +391,10 @@ class AuthService {
   /**
    * Refresh access token
    */
-  public async refreshToken(): Promise<string | null> {
+  public async refreshToken(request?: RefreshTokenRequest): Promise<string | null> {
     try {
       const storedTokens = await this.getStoredTokensSecurely();
-      const userId = await AsyncStorage.getItem(STORAGE_KEYS.USER_ID);
+      const userId = await persistenceService.getUserData<string>('user_id');
 
       if (!storedTokens?.refreshToken || !userId) {
         throw new Error('No refresh token or user ID available');
@@ -320,15 +409,19 @@ class AuthService {
       const response = await apiClient.post<LoginResponse>('/auth/refresh', refreshRequest);
 
       if (response.code === 200 && response.data) {
-        // Store new tokens
+        // Store new tokens using persistence service
+        await persistenceService.storeAccessToken(response.data.accessToken);
+        if (response.data.refreshToken) {
+          await persistenceService.storeRefreshToken(response.data.refreshToken);
+        }
+
+        // Also update apiClient
         const newTokens: AuthTokens = {
           accessToken: response.data.accessToken,
-          refreshToken: storedTokens.refreshToken, // Keep existing refresh token
+          refreshToken: response.data.refreshToken || storedTokens.refreshToken,
           tokenType: response.data.tokenType,
           expiresIn: response.data.expiresIn,
         };
-
-        await this.storeTokensSecurely(newTokens);
         await apiClient.storeTokens(newTokens);
 
         return response.data.accessToken;
@@ -379,13 +472,8 @@ class AuthService {
   private async clearStoredTokens(): Promise<void> {
     try {
       await Promise.all([
-        // Clear Keychain
-        Keychain.resetInternetCredentials(KEYCHAIN_KEYS.ACCESS_TOKEN).catch(() => {}),
-        Keychain.resetInternetCredentials(KEYCHAIN_KEYS.REFRESH_TOKEN).catch(() => {}),
-        // Clear AsyncStorage
-        AsyncStorage.removeItem(STORAGE_KEYS.USER_INFO),
-        AsyncStorage.removeItem(STORAGE_KEYS.USER_ID),
-        AsyncStorage.removeItem(STORAGE_KEYS.LAST_LOGIN_TIME),
+        // Clear user data using persistence service
+        persistenceService.clearUserData(),
         // Clear apiClient tokens
         apiClient.clearStoredTokens(),
       ]);
@@ -399,9 +487,9 @@ class AuthService {
    */
   public async getUserInfo(): Promise<User | null> {
     try {
-      const userInfoStr = await AsyncStorage.getItem(STORAGE_KEYS.USER_INFO);
-      if (userInfoStr) {
-        return JSON.parse(userInfoStr) as User;
+      const userInfo = await persistenceService.getUserData<User>('user_info');
+      if (userInfo) {
+        return userInfo;
       }
 
       // If no local user info, try to fetch from API
@@ -411,7 +499,7 @@ class AuthService {
           const response = await apiClient.get<User>('/auth/userInfo');
           if (response.code === 200 && response.data) {
             // Store fetched user info locally
-            await AsyncStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(response.data));
+            await persistenceService.storeUserData('user_info', response.data);
             return response.data;
           }
         } catch (error) {
@@ -469,7 +557,7 @@ class AuthService {
       }
 
       const updatedUser = { ...currentUser, ...updates };
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(updatedUser));
+      await persistenceService.storeUserData('user_info', updatedUser);
       
       return updatedUser;
     } catch (error) {
@@ -483,7 +571,7 @@ class AuthService {
    */
   public async getLastLoginTime(): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem(STORAGE_KEYS.LAST_LOGIN_TIME);
+      return await persistenceService.getUserData<string>('last_login_time');
     } catch (error) {
       console.error('Error getting last login time:', error);
       return null;

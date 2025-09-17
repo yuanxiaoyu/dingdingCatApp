@@ -2,18 +2,21 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 
-// Import slices
-import { authSlice, configSlice, adSlice, syncSlice } from './slices';
+// Import slice reducers
+import authReducer from './slices/authSlice';
+import configReducer from './slices/configSlice';
+import adReducer from './slices/adSlice';
+import syncReducer from './slices/syncSlice';
 import { apiSlice } from './api/apiSlice';
 
 // Configure the Redux store
 export const store = configureStore({
   reducer: {
     // Feature slices
-    auth: authSlice,
-    config: configSlice,
-    ad: adSlice,
-    sync: syncSlice,
+    auth: authReducer,
+    config: configReducer,
+    ad: adReducer,
+    sync: syncReducer,
     // RTK Query API slice
     [apiSlice.reducerPath]: apiSlice.reducer,
   },

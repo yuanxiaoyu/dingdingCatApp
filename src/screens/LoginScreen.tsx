@@ -18,11 +18,7 @@ import { LoginResponse } from '../types';
 
 const { width } = Dimensions.get('window');
 
-interface LoginScreenProps {
-  onLoginSuccess?: () => void;
-}
-
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+const LoginScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isAuthenticated, isLoading, error } = useAuth();
   const [isWeChatAvailable, setIsWeChatAvailable] = useState<boolean>(false);
@@ -33,12 +29,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     checkWeChatAvailability();
   }, []);
 
-  // Handle authentication state changes
-  useEffect(() => {
-    if (isAuthenticated && onLoginSuccess) {
-      onLoginSuccess();
-    }
-  }, [isAuthenticated, onLoginSuccess]);
+  // Navigation will be handled automatically by RootNavigator based on authentication state
 
   // Clear error when component unmounts
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SyncState, OfflineAdData, BatchReportRequest, BatchReportPlayData } from '../../types';
-import { SyncService } from '../../services/SyncService';
+import syncService from '../../services/SyncService';
 
 // Initial state
 const initialState: SyncState = {

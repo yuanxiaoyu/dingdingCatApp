@@ -10,8 +10,8 @@ export interface EnvConfig {
 // Development environment configuration
 const developmentConfig: EnvConfig = {
   API_BASE_URL: 'https://dev-api.dingdingcat.com',
-  WECHAT_APP_ID: 'wx_dev_app_id', // Replace with actual WeChat App ID
-  APP_KEY: 'dev_app_key', // Replace with actual App Key
+  WECHAT_APP_ID: 'wx_dev_app_id', // Replace with actual WeChat App ID - using placeholder for development
+  APP_KEY: 'dev_app_key', // Replace with actual App Key - using placeholder for development
   DEBUG_MODE: true,
   LOG_LEVEL: 'debug',
 };
