@@ -10,19 +10,20 @@ import HomeScreen from '../screens/HomeScreen';
 import RevenueScreen from '../screens/RevenueScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import AlignedTabIcon from '../components/AlignedTabIcon';
 import { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Tab bar icons (using emoji for now, can be replaced with proper icons)
-const getTabBarIcon = (routeName: keyof MainTabParamList, focused: boolean) => {
-  const icons = {
-    Home: focused ? '🏠' : '🏡',
-    Revenue: focused ? '💰' : '💸',
-    History: focused ? '📊' : '📈',
-    Settings: focused ? '⚙️' : '🔧',
+// Tab bar icon mapping
+const getTabBarIconName = (routeName: keyof MainTabParamList): 'home' | 'revenue' | 'history' | 'settings' => {
+  const iconNames = {
+    Home: 'home' as const,
+    Revenue: 'revenue' as const,
+    History: 'history' as const,
+    Settings: 'settings' as const,
   };
-  return icons[routeName];
+  return iconNames[routeName];
 };
 
 // Tab bar labels
@@ -41,7 +42,14 @@ const MainTabs: React.FC = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({ focused }) => getTabBarIcon(route.name, focused),
+        tabBarIcon: ({ focused, color, size }) => (
+          <AlignedTabIcon 
+            name={getTabBarIconName(route.name)}
+            focused={focused}
+            color={color}
+            size={22}
+          />
+        ),
         tabBarLabel: getTabBarLabel(route.name),
         tabBarActiveTintColor: '#1890FF',
         tabBarInactiveTintColor: '#999999',
@@ -49,20 +57,28 @@ const MainTabs: React.FC = () => {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E8E8E8',
-          paddingBottom: Platform.OS === 'ios' ? 20 : 5,
-          paddingTop: 5,
-          height: Platform.OS === 'ios' ? 85 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          paddingTop: 8,
+          height: Platform.OS === 'ios' ? 85 : 65,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '500',
           marginTop: 2,
+          marginBottom: 2,
         },
-        tabBarIconStyle: {
-          fontSize: 20,
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 4,
         },
-        // Add badge for offline queue count on settings tab
-        tabBarBadge: route.name === 'Settings' ? undefined : undefined,
+
+        // Add badge for offline queue count on settings tab (removed for now)
       })}
       initialRouteName="Home"
     >
@@ -71,7 +87,6 @@ const MainTabs: React.FC = () => {
         component={HomeScreen}
         options={{
           title: '首页',
-          tabBarTestID: 'home-tab',
         }}
       />
       
@@ -80,7 +95,6 @@ const MainTabs: React.FC = () => {
         component={RevenueScreen}
         options={{
           title: '收益',
-          tabBarTestID: 'revenue-tab',
         }}
       />
       
@@ -89,7 +103,6 @@ const MainTabs: React.FC = () => {
         component={HistoryScreen}
         options={{
           title: '历史',
-          tabBarTestID: 'history-tab',
         }}
       />
       
@@ -98,7 +111,6 @@ const MainTabs: React.FC = () => {
         component={SettingsScreen}
         options={{
           title: '设置',
-          tabBarTestID: 'settings-tab',
         }}
       />
     </Tab.Navigator>

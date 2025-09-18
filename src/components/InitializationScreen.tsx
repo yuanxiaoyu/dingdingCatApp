@@ -9,8 +9,7 @@ import {
 } from 'react-native';
 import initializationService, { InitializationStatus, InitPhase } from '../services/InitializationService';
 
-const { width, height } = Dimensions.get('window');
-const Icon = require('../assets/images/mipmap-mdpi_ic_launcher.png')
+const { height } = Dimensions.get('window');
 interface InitializationScreenProps {
   onInitializationComplete: (result: any) => void;
 }
@@ -61,7 +60,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
         if (mounted) {
           onInitializationComplete({
             success: false,
-            error: error.message || 'Initialization failed',
+            error: (error as Error).message || 'Initialization failed',
           });
         }
       }
@@ -104,8 +103,10 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
       {/* App Logo */}
       <View style={styles.logoContainer}>
         <View style={styles.logoPlaceholder}>
-          {/* <Text style={styles.logoText}>丁丁猫</Text> */}
-          <Image style={styles.logoPic} source={Icon} />
+          <Image
+            style={styles.logoPic}
+            source={require('../assets/images/mipmap-mdpi_ic_launcher.png')}
+          />
         </View>
         <Text style={styles.appName}>丁丁猫</Text>
         <Text style={styles.appSubtitle}>广告收益管理</Text>
@@ -152,13 +153,6 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
             <Text style={styles.errorText}>{status.error}</Text>
           </View>
         )}
-
-        {/* Phase Indicator */}
-        <View style={styles.phaseContainer}>
-          <Text style={styles.phaseText}>
-            {getPhaseMessage(status.phase)}
-          </Text>
-        </View>
       </View>
 
       {/* Footer */}
@@ -193,9 +187,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  logoPic:{
-    width:80,
-    height:80
+  logoPic: {
+    width: 80,
+    height: 80
   },
   logoText: {
     fontSize: 24,
@@ -233,7 +227,6 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 3,
-    transition: 'width 0.3s ease',
   },
   progressText: {
     fontSize: 14,

@@ -32,7 +32,7 @@ import {
   selectRevenueData,
   selectAdError,
   fetchUserRevenue,
-  clearError
+  clearAdError
 } from '../store/slices/adSlice';
 import { AdType } from '../types';
 import { ENV_CONFIG } from '../config/env';
@@ -101,7 +101,7 @@ const HomeScreen: React.FC = () => {
   // Clear ad errors when component mounts
   useEffect(() => {
     if (adError) {
-      dispatch(clearError());
+      dispatch(clearAdError());
     }
   }, []);
 
