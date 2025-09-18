@@ -14,7 +14,17 @@
     "test:coverage": "jest --coverage",
     "type-check": "tsc --noEmit",
     "clean": "react-native clean",
-    "postinstall": "cd ios && pod install && cd .."
+    "postinstall": "cd ios && pod install && cd ..",
+    "mock:setup": "node scripts/setup-mock.js",
+    "mock:login": "echo 'MOCK_ENABLED=1\nMOCK_USER_STATE=1' > .env && echo '✅ Mock登录状态已设置'",
+    "mock:logout": "echo 'MOCK_ENABLED=1\nMOCK_USER_STATE=0' > .env && echo '✅ Mock未登录状态已设置'",
+    "mock:disable": "echo 'MOCK_ENABLED=0\nMOCK_USER_STATE=0' > .env && echo '✅ Mock模式已关闭'",
+    "mock:test": "node scripts/test-env-config.js",
+    "icons:generate": "node scripts/generate-app-icons.js",
+    "icons:svg": "node scripts/generate-app-icons.js",
+    "icons:png": "node scripts/generate-png-icons.js",
+    "icons:convert": "./scripts/convert-icons.sh",
+    "app:update-name": "node scripts/update-app-name.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -63,5 +73,6 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "displayName": "丁丁猫"
 }

@@ -58,40 +58,45 @@ export interface Channel {
 
 export interface AdConfig {
   appKey: string;
-  serverTime: number;
+  serverTime?: number;
   configVersion: string;
   adInterval: number;
-  adIntervalEnabled: boolean;
+  adIntervalEnabled?: boolean;
   singleRewardLimit: number;
-  singleRewardLimitEnabled: boolean;
+  singleRewardLimitEnabled?: boolean;
   dailyRewardVideoLimit: number;
-  dailyRewardAmountLimit: number;
-  dailyRewardLimitEnabled: boolean;
+  dailyRewardAmountLimit?: number;
+  dailyRewardLimitEnabled?: boolean;
   dailyAdViewLimit: number;
-  dailyAdViewLimitEnabled: boolean;
+  dailyAdViewLimitEnabled?: boolean;
   adTypeConfig: string;
-  adDisplayStrategy: string;
+  adDisplayStrategy?: string;
   // Extended config for specific ad types
   splashAdConfig?: {
     enabled: boolean;
     adId: string;
     timeout: number;
+    skipDelay?: number;
   };
   rewardVideoAdConfig?: {
     enabled: boolean;
     adId: string;
     minPlayDuration: number;
+    rewardAmount?: number;
   };
   interstitialAdConfig?: {
     enabled: boolean;
     adId: string;
     showInterval: number;
+    rewardAmount?: number;
   };
   bannerAdConfig?: {
     enabled: boolean;
     adId: string;
     position: 'top' | 'bottom';
     autoRefresh: boolean;
+    refreshInterval?: number;
+    rewardAmount?: number;
   };
 }
 
@@ -286,6 +291,7 @@ export interface RefreshTokenRequest {
 
 export interface LoginResponse extends User {
   accessToken: string;
+  refreshToken?: string;
   tokenType: string;
   expiresIn: number;
 }
@@ -293,29 +299,37 @@ export interface LoginResponse extends User {
 // Revenue and History Types
 export interface RevenueData {
   userId: number;
-  userName: string;
+  userName?: string;
   totalRevenue: number;
-  totalWatchCount: number;
+  totalWatchCount?: number;
   todayRevenue: number;
   yesterdayRevenue: number;
   weekRevenue: number;
   monthRevenue: number;
-  todayWatchCount: number;
-  yesterdayWatchCount: number;
-  weekWatchCount: number;
-  monthWatchCount: number;
-  remainingWatchCount: number;
-  avgRevenuePerWatch: number;
-  lastWatchTime: string;
-  accountStatus: string;
-  withdrawableAmount: number;
-  frozenAmount: number;
+  todayWatchCount?: number;
+  yesterdayWatchCount?: number;
+  weekWatchCount?: number;
+  monthWatchCount?: number;
+  remainingWatchCount?: number;
+  avgRevenuePerWatch?: number;
+  lastWatchTime?: string;
+  accountStatus?: string;
+  withdrawableAmount?: number;
+  frozenAmount?: number;
+  // Additional fields for mock service
+  totalAdViews?: number;
+  todayAdViews?: number;
+  averageRevenuePerAd?: number;
+  remainingDailyViews?: number;
+  lastUpdateTime?: string;
 }
 
 export interface AdHistoryItem {
-  statId: number;
+  id?: string;
+  statId?: number;
   adId: string;
   adType: AdType;
+  adTitle?: string;
   playDuration: number;
   isClicked: boolean;
   isSkipped: boolean;
@@ -328,10 +342,13 @@ export interface AdHistoryItem {
 }
 
 export interface AdHistoryResponse {
-  total: number;
+  total?: number;
+  totalRecords?: number;
+  totalPages?: number;
   pageNum: number;
   pageSize: number;
-  historyList: AdHistoryItem[];
+  historyList?: AdHistoryItem[];
+  items?: AdHistoryItem[];
 }
 
 export interface AdHistoryRequest {

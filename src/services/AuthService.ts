@@ -13,13 +13,15 @@ try {
 }
 import apiClient from './apiClient';
 import persistenceService from './PersistenceService';
+import mockService from './MockService';
 import { ENV_CONFIG } from '../config/env';
 import { 
   User, 
   AuthTokens, 
   LoginRequest, 
   RegisterRequest, 
-  LoginResponse
+  LoginResponse,
+  RefreshTokenRequest
 } from '../types';
 
 // Storage keys for secure token storage
@@ -226,6 +228,12 @@ class AuthService {
    */
   public async wechatLogin(): Promise<LoginResponse> {
     try {
+      // Check if mock mode is enabled via environment variable
+      if (ENV_CONFIG.MOCK_ENABLED) {
+        console.log('Using mock WeChat login (env controlled)');
+        return this.mockWeChatLogin();
+      }
+
       // Ensure WeChat is initialized first
       await this.ensureWeChatInitialized();
 
@@ -519,6 +527,20 @@ class AuthService {
    */
   public async isAuthenticated(): Promise<boolean> {
     try {
+      // If mock mode is enabled, use environment variable
+      if (ENV_CONFIG.MOCK_ENABLED) {
+        const shouldBeLoggedIn = ENV_CONFIG.MOCK_USER_STATE === 1;
+        console.log('Auth check (mock mode):', {
+          mockEnabled: ENV_CONFIG.MOCK_ENABLED,
+          mockUserState: ENV_CONFIG.MOCK_USER_STATE,
+          shouldBeLoggedIn,
+        });
+        
+        // Simply return the environment variable state without generating data
+        // Data will be generated when actually needed (e.g., during login flow)
+        return shouldBeLoggedIn;
+      }
+
       // Check if we have stored tokens
       const storedTokens = await this.getStoredTokensSecurely();
       if (!storedTokens?.accessToken) {

@@ -4,6 +4,7 @@ import configService from './ConfigService';
 import deviceService from './DeviceService';
 import riskControlService from './RiskControlService';
 import syncService from './SyncService';
+import mockService from './MockService';
 import { ENV_CONFIG } from '../config/env';
 
 // Storage keys for initialization tracking
@@ -84,6 +85,11 @@ class InitializationService {
 
       // Check if this is first launch
       result.isFirstLaunch = await this.checkFirstLaunch();
+
+      // Initialize mock service if in development
+      if (ENV_CONFIG.DEBUG_MODE) {
+        await mockService.initialize();
+      }
 
       // Phase 1: Authentication check
       await this.updateStatus(InitPhase.AUTH_CHECK, 10, '检查用户认证状态...');

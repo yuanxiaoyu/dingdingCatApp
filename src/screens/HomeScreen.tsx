@@ -23,14 +23,13 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { 
-  selectUser, 
+import {
+  selectUser,
   selectIsAuthenticated,
-  selectAuthLoading 
+  selectAuthLoading
 } from '../store/slices/authSlice';
-import { 
+import {
   selectRevenueData,
-  selectAdLoading,
   selectAdError,
   fetchUserRevenue,
   clearError
@@ -38,6 +37,9 @@ import {
 import { AdType } from '../types';
 import { ENV_CONFIG } from '../config/env';
 import IntegratedAdService, { AdEventCallbacks } from '../services/IntegratedAdService';
+import DevTools from '../components/DevTools';
+import SimpleDevToolsIcon from '../components/SimpleDevToolsIcon';
+
 
 // Ad type configuration for buttons
 const AD_TYPE_CONFIG = [
@@ -73,18 +75,19 @@ const AD_TYPE_CONFIG = [
 
 const HomeScreen: React.FC = () => {
   const dispatch = useDispatch();
-  
+
   // Redux state
   const user = useSelector(selectUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const authLoading = useSelector(selectAuthLoading);
   const revenueData = useSelector(selectRevenueData);
-  const adLoading = useSelector(selectAdLoading);
+
   const adError = useSelector(selectAdError);
 
   // Local state
   const [refreshing, setRefreshing] = useState(false);
   const [loadingAdType, setLoadingAdType] = useState<AdType | null>(null);
+  const [showDevTools, setShowDevTools] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -105,9 +108,9 @@ const HomeScreen: React.FC = () => {
   // Load user revenue data
   const loadUserRevenue = useCallback(async () => {
     if (!user) return;
-    
+
     try {
-      await dispatch(fetchUserRevenue({
+      await (dispatch as any)(fetchUserRevenue({
         userId: user.userId,
         appKey: user.appKey,
       })).unwrap();
@@ -124,23 +127,23 @@ const HomeScreen: React.FC = () => {
   }, [loadUserRevenue]);
 
   // Create ad event callbacks
-  const createAdCallbacks = useCallback((adType: AdType): AdEventCallbacks => ({
+  const createAdCallbacks = useCallback((_adType: AdType): AdEventCallbacks => ({
     onAdLoaded: (adId: string, adType: AdType) => {
       console.log(`Ad loaded: ${adType} - ${adId}`);
     },
-    
+
     onAdShown: (adId: string, adType: AdType) => {
       console.log(`Ad shown: ${adType} - ${adId}`);
     },
-    
+
     onAdClicked: (adId: string, adType: AdType) => {
       console.log(`Ad clicked: ${adType} - ${adId}`);
     },
-    
+
     onAdCompleted: (adId: string, adType: AdType, reward: number) => {
       console.log(`Ad completed: ${adType} - ${adId}, reward: ${reward}`);
       setLoadingAdType(null);
-      
+
       if (reward > 0) {
         Alert.alert(
           '恭喜获得奖励！',
@@ -153,18 +156,18 @@ const HomeScreen: React.FC = () => {
         ]);
       }
     },
-    
+
     onAdSkipped: (adId: string, adType: AdType) => {
       console.log(`Ad skipped: ${adType} - ${adId}`);
       setLoadingAdType(null);
       Alert.alert('广告已跳过', '您跳过了广告播放');
     },
-    
+
     onAdClosed: (adId: string, adType: AdType) => {
       console.log(`Ad closed: ${adType} - ${adId}`);
       setLoadingAdType(null);
     },
-    
+
     onAdError: (adId: string, adType: AdType, error: Error) => {
       console.error(`Ad error: ${adType} - ${adId}:`, error);
       setLoadingAdType(null);
@@ -296,6 +299,15 @@ const HomeScreen: React.FC = () => {
                 ¥{revenueData?.todayRevenue?.toFixed(2) || '0.00'}
               </Text>
             </View>
+            {/* Dev Tools Button (Debug Mode Only) */}
+            {ENV_CONFIG.DEBUG_MODE && (
+              <TouchableOpacity
+                style={styles.devToolsButton}
+                onPress={() => setShowDevTools(true)}
+              >
+                <SimpleDevToolsIcon size={32} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -330,7 +342,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.adSection}>
           <Text style={styles.sectionTitle}>广告类型</Text>
           <Text style={styles.sectionSubtitle}>点击下方按钮观看广告获得收益</Text>
-          
+
           <View style={styles.adButtonsContainer}>
             {AD_TYPE_CONFIG.map((config) => (
               <TouchableOpacity
@@ -375,6 +387,12 @@ const HomeScreen: React.FC = () => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Dev Tools Modal */}
+      <DevTools
+        visible={showDevTools}
+        onClose={() => setShowDevTools(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -481,6 +499,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#52C41A',
   },
+  devToolsButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+    overflow: 'hidden', // 确保图片不会超出圆形边界
+  },
+
+
 
   // Stats Card Styles
   statsCard: {

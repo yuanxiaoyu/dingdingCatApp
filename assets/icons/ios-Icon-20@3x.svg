@@ -1,0 +1,51 @@
+
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1890FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#096DD9;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="catGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F0F0F0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="30" cy="30" r="28" fill="url(#bgGradient)" />
+  
+  <!-- 猫咪头部 -->
+  <circle cx="30" cy="33" r="16.8" fill="url(#catGradient)" stroke="#E6F7FF" stroke-width="0.6"/>
+  
+  <!-- 猫耳朵 -->
+  <path d="M 21 19.2 L 25.2 10.799999999999999 L 28.799999999999997 16.8 Z" fill="url(#catGradient)" stroke="#E6F7FF" stroke-width="0.3"/>
+  <path d="M 31.200000000000003 16.8 L 34.8 10.799999999999999 L 39 19.2 Z" fill="url(#catGradient)" stroke="#E6F7FF" stroke-width="0.3"/>
+  
+  <!-- 猫耳朵内部 -->
+  <path d="M 22.8 16.8 L 25.8 13.2 L 27.6 15.600000000000001 Z" fill="#FFB6C1"/>
+  <path d="M 32.400000000000006 15.600000000000001 L 34.199999999999996 13.2 L 37.2 16.8 Z" fill="#FFB6C1"/>
+  
+  <!-- 猫眼睛 -->
+  <ellipse cx="25.2" cy="27" rx="2.4" ry="3.5999999999999996" fill="#333333"/>
+  <ellipse cx="34.8" cy="27" rx="2.4" ry="3.5999999999999996" fill="#333333"/>
+  
+  <!-- 眼睛高光 -->
+  <ellipse cx="25.8" cy="25.8" rx="0.8999999999999999" ry="1.2" fill="#FFFFFF"/>
+  <ellipse cx="35.4" cy="25.8" rx="0.8999999999999999" ry="1.2" fill="#FFFFFF"/>
+  
+  <!-- 猫鼻子 -->
+  <path d="M 30 31.200000000000003 L 28.799999999999997 33 L 31.200000000000003 33 Z" fill="#FF69B4"/>
+  
+  <!-- 猫嘴巴 -->
+  <path d="M 30 33 Q 27.6 34.8 26.4 33.6" stroke="#333333" stroke-width="0.48" fill="none" stroke-linecap="round"/>
+  <path d="M 30 33 Q 32.400000000000006 34.8 33.6 33.6" stroke="#333333" stroke-width="0.48" fill="none" stroke-linecap="round"/>
+  
+  <!-- 猫胡须 -->
+  <line x1="19.2" y1="28.799999999999997" x2="22.8" y2="28.2" stroke="#333333" stroke-width="0.36" stroke-linecap="round"/>
+  <line x1="19.2" y1="31.200000000000003" x2="22.8" y2="31.200000000000003" stroke="#333333" stroke-width="0.36" stroke-linecap="round"/>
+  <line x1="37.2" y1="28.2" x2="40.800000000000004" y2="28.799999999999997" stroke="#333333" stroke-width="0.36" stroke-linecap="round"/>
+  <line x1="37.2" y1="31.200000000000003" x2="40.800000000000004" y2="31.200000000000003" stroke="#333333" stroke-width="0.36" stroke-linecap="round"/>
+  
+  <!-- 文字 "丁丁" (简化版) -->
+  <text x="30" y="48" font-family="Arial, sans-serif" font-size="7.199999999999999" font-weight="bold" text-anchor="middle" fill="#FFFFFF">丁丁</text>
+</svg>

@@ -5,11 +5,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  Image
 } from 'react-native';
 import initializationService, { InitializationStatus, InitPhase } from '../services/InitializationService';
 
 const { width, height } = Dimensions.get('window');
-
+const Icon = require('../assets/images/mipmap-mdpi_ic_launcher.png')
 interface InitializationScreenProps {
   onInitializationComplete: (result: any) => void;
 }
@@ -103,7 +104,8 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
       {/* App Logo */}
       <View style={styles.logoContainer}>
         <View style={styles.logoPlaceholder}>
-          <Text style={styles.logoText}>丁丁猫</Text>
+          {/* <Text style={styles.logoText}>丁丁猫</Text> */}
+          <Image style={styles.logoPic} source={Icon} />
         </View>
         <Text style={styles.appName}>丁丁猫</Text>
         <Text style={styles.appSubtitle}>广告收益管理</Text>
@@ -183,13 +185,17 @@ const styles = StyleSheet.create({
     marginTop: height * 0.1,
   },
   logoPlaceholder: {
-    width: 120,
-    height: 120,
-    backgroundColor: '#1890FF',
+    width: 140,
+    height: 140,
+    // backgroundColor: '#1890FF',
     borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  logoPic:{
+    width:80,
+    height:80
   },
   logoText: {
     fontSize: 24,

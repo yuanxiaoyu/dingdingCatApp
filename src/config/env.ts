@@ -5,7 +5,24 @@ export interface EnvConfig {
   APP_KEY: string;
   DEBUG_MODE: boolean;
   LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
+  // Mock configuration
+  MOCK_ENABLED: boolean;
+  MOCK_USER_STATE: 0 | 1; // 0: 未登录, 1: 登录状态
 }
+
+// Helper function to safely get environment variables
+const getEnvVar = (key: string, defaultValue?: string): string | undefined => {
+  try {
+    // Try to access process.env safely
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env[key];
+    }
+    return defaultValue;
+  } catch (error) {
+    console.warn(`Failed to read environment variable ${key}:`, error);
+    return defaultValue;
+  }
+};
 
 // Development environment configuration
 const developmentConfig: EnvConfig = {
@@ -14,6 +31,9 @@ const developmentConfig: EnvConfig = {
   APP_KEY: 'dev_app_key', // Replace with actual App Key - using placeholder for development
   DEBUG_MODE: true,
   LOG_LEVEL: 'debug',
+  // Mock configuration - 可以通过环境变量覆盖
+  MOCK_ENABLED: getEnvVar('MOCK_ENABLED') === '1' || true, // 默认开启Mock
+  MOCK_USER_STATE: (getEnvVar('MOCK_USER_STATE') === '0' ? 0 : 1) as 0 | 1, // 默认登录状态
 };
 
 // Production environment configuration
@@ -23,6 +43,9 @@ const productionConfig: EnvConfig = {
   APP_KEY: 'prod_app_key', // Replace with actual App Key
   DEBUG_MODE: false,
   LOG_LEVEL: 'error',
+  // Mock configuration - 生产环境默认关闭
+  MOCK_ENABLED: getEnvVar('MOCK_ENABLED') === '1' || false,
+  MOCK_USER_STATE: (getEnvVar('MOCK_USER_STATE') === '0' ? 0 : 1) as 0 | 1,
 };
 
 // Export configuration based on environment

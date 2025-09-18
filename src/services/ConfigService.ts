@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from './apiClient';
+import mockService from './MockService';
 import { ENV_CONFIG } from '../config/env';
 import {
   AppConfig,
@@ -127,6 +128,15 @@ class ConfigService {
    */
   public async getAdConfig(forceRefresh = false): Promise<AdConfig | null> {
     try {
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock ad config');
+        }
+        return await mockService.getMockAdConfig();
+      }
+
       // Check cache first if not forcing refresh
       if (!forceRefresh) {
         const cachedConfig = await this.getCachedAdConfig();

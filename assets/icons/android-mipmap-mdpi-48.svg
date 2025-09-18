@@ -1,0 +1,51 @@
+
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1890FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#096DD9;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="catGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F0F0F0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="24" cy="24" r="22" fill="url(#bgGradient)" />
+  
+  <!-- 猫咪头部 -->
+  <circle cx="24" cy="26.4" r="13.440000000000001" fill="url(#catGradient)" stroke="#E6F7FF" stroke-width="0.48"/>
+  
+  <!-- 猫耳朵 -->
+  <path d="M 16.799999999999997 15.36 L 20.16 8.64 L 23.04 13.440000000000001 Z" fill="url(#catGradient)" stroke="#E6F7FF" stroke-width="0.24"/>
+  <path d="M 24.96 13.440000000000001 L 27.839999999999996 8.64 L 31.200000000000003 15.36 Z" fill="url(#catGradient)" stroke="#E6F7FF" stroke-width="0.24"/>
+  
+  <!-- 猫耳朵内部 -->
+  <path d="M 18.240000000000002 13.440000000000001 L 20.64 10.56 L 22.080000000000002 12.48 Z" fill="#FFB6C1"/>
+  <path d="M 25.92 12.48 L 27.36 10.56 L 29.759999999999998 13.440000000000001 Z" fill="#FFB6C1"/>
+  
+  <!-- 猫眼睛 -->
+  <ellipse cx="20.16" cy="21.6" rx="1.92" ry="2.88" fill="#333333"/>
+  <ellipse cx="27.839999999999996" cy="21.6" rx="1.92" ry="2.88" fill="#333333"/>
+  
+  <!-- 眼睛高光 -->
+  <ellipse cx="20.64" cy="20.64" rx="0.72" ry="0.96" fill="#FFFFFF"/>
+  <ellipse cx="28.32" cy="20.64" rx="0.72" ry="0.96" fill="#FFFFFF"/>
+  
+  <!-- 猫鼻子 -->
+  <path d="M 24 24.96 L 23.04 26.400000000000002 L 24.96 26.400000000000002 Z" fill="#FF69B4"/>
+  
+  <!-- 猫嘴巴 -->
+  <path d="M 24 26.400000000000002 Q 22.080000000000002 27.839999999999996 21.12 26.880000000000003" stroke="#333333" stroke-width="0.384" fill="none" stroke-linecap="round"/>
+  <path d="M 24 26.400000000000002 Q 25.92 27.839999999999996 26.880000000000003 26.880000000000003" stroke="#333333" stroke-width="0.384" fill="none" stroke-linecap="round"/>
+  
+  <!-- 猫胡须 -->
+  <line x1="15.36" y1="23.04" x2="18.240000000000002" y2="22.56" stroke="#333333" stroke-width="0.28800000000000003" stroke-linecap="round"/>
+  <line x1="15.36" y1="24.96" x2="18.240000000000002" y2="24.96" stroke="#333333" stroke-width="0.28800000000000003" stroke-linecap="round"/>
+  <line x1="29.759999999999998" y1="22.56" x2="32.64" y2="23.04" stroke="#333333" stroke-width="0.28800000000000003" stroke-linecap="round"/>
+  <line x1="29.759999999999998" y1="24.96" x2="32.64" y2="24.96" stroke="#333333" stroke-width="0.28800000000000003" stroke-linecap="round"/>
+  
+  <!-- 文字 "丁丁" (简化版) -->
+  <text x="24" y="38.400000000000006" font-family="Arial, sans-serif" font-size="5.76" font-weight="bold" text-anchor="middle" fill="#FFFFFF">丁丁</text>
+</svg>
