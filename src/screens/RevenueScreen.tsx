@@ -275,33 +275,33 @@ const RevenueScreen: React.FC = () => {
           
           <View style={styles.cardsContainer}>
             <RevenueCard
-              title="总收益"
-              value={`¥${revenueData?.totalRevenue?.toFixed(2) || '0.00'}`}
-              subtitle={`累计观看 ${revenueData?.totalWatchCount || 0} 次`}
+              title="总完播次数"
+              value={`${revenueData?.totalCompletedCount || revenueData?.totalWatchCount || 0} 次`}
+              subtitle={`预计收益 ¥${((revenueData?.totalCompletedCount || revenueData?.totalWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}`}
               color="#52C41A"
               icon="💰"
             />
             
             <RevenueCard
-              title="今日收益"
-              value={`¥${revenueData?.todayRevenue?.toFixed(2) || '0.00'}`}
-              subtitle={`今日观看 ${revenueData?.todayWatchCount || 0} 次`}
+              title="今日完播"
+              value={`${revenueData?.todayCompletedCount || revenueData?.todayWatchCount || 0} 次`}
+              subtitle={`预计收益 ¥${((revenueData?.todayCompletedCount || revenueData?.todayWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}`}
               color="#1890FF"
               icon="📈"
             />
             
             <RevenueCard
-              title="昨日收益"
-              value={`¥${revenueData?.yesterdayRevenue?.toFixed(2) || '0.00'}`}
-              subtitle={`昨日观看 ${revenueData?.yesterdayWatchCount || 0} 次`}
+              title="昨日完播"
+              value={`${revenueData?.yesterdayWatchCount || 0} 次`}
+              subtitle={`预计收益 ¥${((revenueData?.yesterdayWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}`}
               color="#722ED1"
               icon="📊"
             />
             
             <RevenueCard
-              title="平均收益"
-              value={`¥${revenueData?.avgRevenuePerWatch?.toFixed(3) || '0.000'}`}
-              subtitle="每次观看平均收益"
+              title="单次收益"
+              value={`¥${revenueData?.singleRevenueAmount?.toFixed(2) || '0.05'}`}
+              subtitle="每次完播收益"
               color="#FA8C16"
               icon="⚡"
             />
@@ -317,28 +317,25 @@ const RevenueScreen: React.FC = () => {
           <View style={styles.trendCard}>
             <View style={styles.trendHeader}>
               <Text style={styles.trendTitle}>
-                {selectedPeriod === 'today' ? '今日' : selectedPeriod === 'week' ? '本周' : '本月'}收益详情
+                {selectedPeriod === 'today' ? '今日' : selectedPeriod === 'week' ? '本周' : '本月'}完播统计
               </Text>
               <Text style={styles.trendValue}>
-                ¥{getRevenueByPeriod(selectedPeriod).toFixed(2)}
+                {getWatchCountByPeriod(selectedPeriod)} 次
               </Text>
             </View>
             
             <View style={styles.trendStats}>
               <View style={styles.trendStatItem}>
-                <Text style={styles.trendStatLabel}>观看次数</Text>
+                <Text style={styles.trendStatLabel}>完播次数</Text>
                 <Text style={styles.trendStatValue}>
                   {getWatchCountByPeriod(selectedPeriod)}
                 </Text>
               </View>
               <View style={styles.trendStatDivider} />
               <View style={styles.trendStatItem}>
-                <Text style={styles.trendStatLabel}>平均收益</Text>
+                <Text style={styles.trendStatLabel}>预计收益</Text>
                 <Text style={styles.trendStatValue}>
-                  ¥{getWatchCountByPeriod(selectedPeriod) > 0 
-                    ? (getRevenueByPeriod(selectedPeriod) / getWatchCountByPeriod(selectedPeriod)).toFixed(3)
-                    : '0.000'
-                  }
+                  ¥{(getWatchCountByPeriod(selectedPeriod) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
                 </Text>
               </View>
             </View>
@@ -351,32 +348,32 @@ const RevenueScreen: React.FC = () => {
           
           <View style={styles.statsCard}>
             <StatItem
-              label="总收益"
-              value={revenueData?.totalRevenue?.toFixed(2) || '0.00'}
+              label="总预计收益"
+              value={((revenueData?.totalCompletedCount || revenueData?.totalWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
               unit="元"
               color="#52C41A"
             />
             <StatItem
-              label="今日收益"
-              value={revenueData?.todayRevenue?.toFixed(2) || '0.00'}
+              label="今日预计收益"
+              value={((revenueData?.todayCompletedCount || revenueData?.todayWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
               unit="元"
               color="#1890FF"
             />
             <StatItem
-              label="昨日收益"
-              value={revenueData?.yesterdayRevenue?.toFixed(2) || '0.00'}
+              label="昨日预计收益"
+              value={((revenueData?.yesterdayWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
               unit="元"
               color="#722ED1"
             />
             <StatItem
-              label="本周收益"
-              value={revenueData?.weekRevenue?.toFixed(2) || '0.00'}
+              label="本周预计收益"
+              value={((revenueData?.weekWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
               unit="元"
               color="#13C2C2"
             />
             <StatItem
-              label="本月收益"
-              value={revenueData?.monthRevenue?.toFixed(2) || '0.00'}
+              label="本月预计收益"
+              value={((revenueData?.monthWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
               unit="元"
               color="#FA8C16"
             />
@@ -384,27 +381,27 @@ const RevenueScreen: React.FC = () => {
 
           <View style={styles.statsCard}>
             <StatItem
-              label="总观看次数"
-              value={revenueData?.totalWatchCount || 0}
+              label="总完播次数"
+              value={revenueData?.totalCompletedCount || revenueData?.totalWatchCount || 0}
               unit="次"
             />
             <StatItem
-              label="今日观看次数"
-              value={revenueData?.todayWatchCount || 0}
+              label="今日完播次数"
+              value={revenueData?.todayCompletedCount || revenueData?.todayWatchCount || 0}
               unit="次"
             />
             <StatItem
-              label="昨日观看次数"
+              label="昨日完播次数"
               value={revenueData?.yesterdayWatchCount || 0}
               unit="次"
             />
             <StatItem
-              label="本周观看次数"
+              label="本周完播次数"
               value={revenueData?.weekWatchCount || 0}
               unit="次"
             />
             <StatItem
-              label="本月观看次数"
+              label="本月完播次数"
               value={revenueData?.monthWatchCount || 0}
               unit="次"
             />
@@ -418,14 +415,14 @@ const RevenueScreen: React.FC = () => {
               color="#52C41A"
             />
             <StatItem
-              label="平均每次收益"
-              value={revenueData?.avgRevenuePerWatch?.toFixed(3) || '0.000'}
+              label="单次完播收益"
+              value={revenueData?.singleRevenueAmount?.toFixed(2) || '0.05'}
               unit="元"
               color="#1890FF"
             />
             <StatItem
-              label="可提现金额"
-              value={revenueData?.withdrawableAmount?.toFixed(2) || '0.00'}
+              label="预计可提现金额"
+              value={((revenueData?.totalCompletedCount || revenueData?.totalWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
               unit="元"
               color="#52C41A"
             />

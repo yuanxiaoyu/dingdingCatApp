@@ -7,7 +7,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
-import RevenueScreen from '../screens/RevenueScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AlignedTabIcon from '../components/AlignedTabIcon';
@@ -16,10 +15,9 @@ import { MainTabParamList } from './types';
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Tab bar icon mapping
-const getTabBarIconName = (routeName: keyof MainTabParamList): 'home' | 'revenue' | 'history' | 'settings' => {
+const getTabBarIconName = (routeName: keyof MainTabParamList): 'home' | 'history' | 'settings' => {
   const iconNames = {
     Home: 'home' as const,
-    Revenue: 'revenue' as const,
     History: 'history' as const,
     Settings: 'settings' as const,
   };
@@ -30,7 +28,6 @@ const getTabBarIconName = (routeName: keyof MainTabParamList): 'home' | 'revenue
 const getTabBarLabel = (routeName: keyof MainTabParamList) => {
   const labels = {
     Home: '首页',
-    Revenue: '收益',
     History: '历史',
     Settings: '设置',
   };
@@ -87,14 +84,6 @@ const MainTabs: React.FC = () => {
         component={HomeScreen}
         options={{
           title: '首页',
-        }}
-      />
-      
-      <Tab.Screen 
-        name="Revenue" 
-        component={RevenueScreen}
-        options={{
-          title: '收益',
         }}
       />
       

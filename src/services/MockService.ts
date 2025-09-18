@@ -661,6 +661,11 @@ class MockService {
       loginFrequencyEnabled: true,
       blacklistCheckEnabled: true,
       riskLevel: 2,
+      // 新增单次收益金额配置
+      singleRevenueLimit: 100, // 单次最大收益限制（分）
+      singleRevenueAmount: 5, // 单次收益金额（分），即0.05元
+      dailyRewardVideoLimit: 50,
+      dailyAdViewLimit: 200,
     };
   }
 
@@ -746,10 +751,12 @@ class MockService {
   public async mockGetRevenue(userId: number): Promise<RevenueData> {
     await this.simulateNetworkDelay(300, 600);
     
+    // 使用新的收益计算逻辑：完播次数 × 单次收益金额
+    const singleRevenueAmount = 0.05; // 单次收益0.05元（从风控配置获取）
     const totalWatchCount = 156 + Math.floor(Math.random() * 50);
-    const totalRevenue = totalWatchCount * 0.1 + Math.random() * 5;
+    const totalRevenue = totalWatchCount * singleRevenueAmount;
     const todayWatchCount = 23 + Math.floor(Math.random() * 10);
-    const todayRevenue = todayWatchCount * 0.1 + Math.random() * 1;
+    const todayRevenue = todayWatchCount * singleRevenueAmount;
     
     return {
       userId: userId,
@@ -757,19 +764,23 @@ class MockService {
       totalRevenue: Number(totalRevenue.toFixed(2)),
       totalWatchCount: totalWatchCount,
       todayRevenue: Number(todayRevenue.toFixed(2)),
-      yesterdayRevenue: Number((todayRevenue * 0.8).toFixed(2)),
-      weekRevenue: Number((totalRevenue * 0.8).toFixed(2)),
+      yesterdayRevenue: Number((Math.floor(todayWatchCount * 0.8) * singleRevenueAmount).toFixed(2)),
+      weekRevenue: Number((Math.floor(totalWatchCount * 0.8) * singleRevenueAmount).toFixed(2)),
       monthRevenue: totalRevenue,
       todayWatchCount: todayWatchCount,
       yesterdayWatchCount: Math.floor(todayWatchCount * 0.8),
       weekWatchCount: Math.floor(totalWatchCount * 0.8),
       monthWatchCount: totalWatchCount,
       remainingWatchCount: 100 - todayWatchCount,
-      avgRevenuePerWatch: Number((totalRevenue / totalWatchCount).toFixed(3)),
+      avgRevenuePerWatch: singleRevenueAmount,
       lastWatchTime: new Date(Date.now() - Math.random() * 3600000).toISOString(),
       accountStatus: 'normal',
       withdrawableAmount: totalRevenue,
       frozenAmount: 0.00,
+      // 新增字段：完播次数统计
+      totalCompletedCount: totalWatchCount,
+      todayCompletedCount: todayWatchCount,
+      singleRevenueAmount: singleRevenueAmount,
     };
   }
 
@@ -857,27 +868,17 @@ class MockService {
   public async mockAdComplete(userId: number, adId: string, adType: AdType, playDuration: number, isClicked: boolean): Promise<number> {
     await this.simulateNetworkDelay(200, 500);
     
-    let reward = 0;
-    switch (adType) {
-      case AdType.SPLASH:
-        reward = 0.01;
-        break;
-      case AdType.REWARD_VIDEO:
-        reward = 0.05;
-        break;
-      case AdType.INTERSTITIAL:
-        reward = 0.02;
-        break;
-      case AdType.BANNER:
-        reward = 0.005;
-        break;
-    }
+    // 使用统一的单次收益金额
+    const singleRevenueAmount = 0.05; // 每次完播固定收益0.05元
     
+    let reward = singleRevenueAmount;
+    
+    // 点击可能有额外奖励（可选）
     if (isClicked) {
-      reward *= 1.2; // 点击奖励倍数
+      reward *= 1.1; // 点击奖励倍数降低
     }
     
-    console.log(`MockService: 广告完播上报 - 用户: ${userId}, 广告: ${adId}, 类型: ${adType}, 奖励: ${reward}`);
+    console.log(`MockService: 广告完播上报 - 用户: ${userId}, 广告: ${adId}, 类型: ${adType}, 奖励: ${reward.toFixed(3)}`);
     return Number(reward.toFixed(3));
   }
 

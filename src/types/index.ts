@@ -120,6 +120,9 @@ export interface RiskConfig {
   // Legacy fields for backward compatibility
   dailyRewardVideoLimit?: number;
   singleRevenueLimit?: number;
+  // New fields for revenue calculation
+  singleRevenueAmount?: number; // Single revenue amount per completion (in cents)
+  dailyAdViewLimit?: number;
 }
 
 // Ad Data Models
@@ -322,6 +325,10 @@ export interface RevenueData {
   averageRevenuePerAd?: number;
   remainingDailyViews?: number;
   lastUpdateTime?: string;
+  // New fields for completion count tracking
+  totalCompletedCount?: number;
+  todayCompletedCount?: number;
+  singleRevenueAmount?: number; // Single revenue amount per completion
 }
 
 export interface AdHistoryItem {

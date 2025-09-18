@@ -16,9 +16,9 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  Image,
   Alert,
   ActivityIndicator,
-  Image,
   RefreshControl,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,39 +39,31 @@ import { ENV_CONFIG } from '../config/env';
 import IntegratedAdService, { AdEventCallbacks } from '../services/IntegratedAdService';
 import DevTools from '../components/DevTools';
 import SimpleDevToolsIcon from '../components/SimpleDevToolsIcon';
-import BannerAdComponent from '../components/BannerAdComponent';
-import SimpleBannerAd from '../components/SimpleBannerAd';
+import Icon from '../assets/images/mipmap-mdpi_ic_launcher.png';
 
 
-// Ad type configuration for buttons
+// Ad type configuration for buttons (removed Banner ad)
 const AD_TYPE_CONFIG = [
   {
     type: AdType.SPLASH,
     title: '开屏广告',
     description: '应用启动时展示',
-    icon: '🚀',
-    color: '#FF6B6B',
+    icon: '📱',
+    color: '#EF4444',
   },
   {
     type: AdType.REWARD_VIDEO,
     title: '视频激励广告',
     description: '观看完整视频获得奖励',
     icon: '🎬',
-    color: '#4ECDC4',
+    color: '#10B981',
   },
   {
     type: AdType.INTERSTITIAL,
     title: '插屏广告',
     description: '全屏展示广告',
-    icon: '📱',
-    color: '#45B7D1',
-  },
-  {
-    type: AdType.BANNER,
-    title: 'Banner广告',
-    description: '页面底部横幅广告',
-    icon: '📰',
-    color: '#96CEB4',
+    icon: '📺',
+    color: '#3B82F6',
   },
 ];
 
@@ -90,6 +82,12 @@ const HomeScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loadingAdType, setLoadingAdType] = useState<AdType | null>(null);
   const [showDevTools, setShowDevTools] = useState(false);
+  const [adButtonStates, setAdButtonStates] = useState<Record<AdType, 'idle' | 'loading' | 'playing'>>({
+    [AdType.SPLASH]: 'idle',
+    [AdType.REWARD_VIDEO]: 'idle',
+    [AdType.INTERSTITIAL]: 'idle',
+    [AdType.BANNER]: 'idle',
+  });
 
   // Load initial data
   useEffect(() => {
@@ -128,14 +126,24 @@ const HomeScreen: React.FC = () => {
     setRefreshing(false);
   }, [loadUserRevenue]);
 
+  // Update ad button state
+  const updateAdButtonState = useCallback((adType: AdType, state: 'idle' | 'loading' | 'playing') => {
+    setAdButtonStates(prev => ({
+      ...prev,
+      [adType]: state,
+    }));
+  }, []);
+
   // Create ad event callbacks
-  const createAdCallbacks = useCallback((_adType: AdType): AdEventCallbacks => ({
+  const createAdCallbacks = useCallback((adType: AdType): AdEventCallbacks => ({
     onAdLoaded: (adId: string, adType: AdType) => {
       console.log(`Ad loaded: ${adType} - ${adId}`);
+      updateAdButtonState(adType, 'playing');
     },
 
     onAdShown: (adId: string, adType: AdType) => {
       console.log(`Ad shown: ${adType} - ${adId}`);
+      updateAdButtonState(adType, 'playing');
     },
 
     onAdClicked: (adId: string, adType: AdType) => {
@@ -145,59 +153,42 @@ const HomeScreen: React.FC = () => {
     onAdCompleted: (adId: string, adType: AdType, reward: number) => {
       console.log(`Ad completed: ${adType} - ${adId}, reward: ${reward}`);
       setLoadingAdType(null);
+      updateAdButtonState(adType, 'idle');
 
-      if (reward > 0) {
-        Alert.alert(
-          '恭喜获得奖励！',
-          `您观看${getAdTypeDisplayName(adType)}获得了 ¥${reward.toFixed(2)} 奖励！`,
-          [{ text: '确定', onPress: () => loadUserRevenue() }]
-        );
-      } else {
-        Alert.alert('广告播放完成', '感谢您的观看！', [
-          { text: '确定', onPress: () => loadUserRevenue() }
-        ]);
-      }
+      // 显示完播提示，不显示具体收益金额
+      Alert.alert(
+        '广告观看完成！',
+        `您已完成一次${getAdTypeDisplayName(adType)}观看，感谢您的参与！`,
+        [{ text: '确定', onPress: () => loadUserRevenue() }]
+      );
     },
 
     onAdSkipped: (adId: string, adType: AdType) => {
       console.log(`Ad skipped: ${adType} - ${adId}`);
       setLoadingAdType(null);
+      updateAdButtonState(adType, 'idle');
       Alert.alert('广告已跳过', '您跳过了广告播放');
     },
 
     onAdClosed: (adId: string, adType: AdType) => {
       console.log(`Ad closed: ${adType} - ${adId}`);
       setLoadingAdType(null);
+      updateAdButtonState(adType, 'idle');
     },
 
     onAdError: (adId: string, adType: AdType, error: Error) => {
       console.error(`Ad error: ${adType} - ${adId}:`, error);
       setLoadingAdType(null);
+      updateAdButtonState(adType, 'idle');
       Alert.alert(
         '广告加载失败',
         `${getAdTypeDisplayName(adType)}加载失败，请稍后重试。\n错误信息：${error.message}`,
         [{ text: '确定' }]
       );
     },
-  }), [loadUserRevenue]);
+  }), [loadUserRevenue, updateAdButtonState]);
 
-  // Handle banner ad click
-  const handleBannerAdClick = useCallback((adData: any) => {
-    console.log('Banner ad clicked:', adData);
-    Alert.alert(
-      '广告点击',
-      `您点击了Banner广告！\n广告ID: ${adData.adId}\n奖励: ¥${adData.rewardAmount?.toFixed(2) || '0.00'}`,
-      [
-        { text: '确定', onPress: () => loadUserRevenue() }
-      ]
-    );
-  }, [loadUserRevenue]);
 
-  // Handle banner ad error
-  const handleBannerAdError = useCallback((error: Error) => {
-    console.error('Banner ad error:', error);
-    // 静默处理Banner广告错误，不影响用户体验
-  }, []);
 
   // Handle ad button press with integrated service
   const handleAdButtonPress = useCallback(async (adType: AdType) => {
@@ -219,6 +210,7 @@ const HomeScreen: React.FC = () => {
     }
 
     setLoadingAdType(adType);
+    updateAdButtonState(adType, 'loading');
     const callbacks = createAdCallbacks(adType);
 
     try {
@@ -232,15 +224,14 @@ const HomeScreen: React.FC = () => {
         case AdType.INTERSTITIAL:
           await IntegratedAdService.loadAndShowInterstitialAd(callbacks);
           break;
-        case AdType.BANNER:
-          await IntegratedAdService.loadAndShowBannerAd(callbacks);
-          break;
+
         default:
           throw new Error(`Unsupported ad type: ${adType}`);
       }
     } catch (error: any) {
       console.error(`Failed to load ${adType} ad:`, error);
       setLoadingAdType(null);
+      updateAdButtonState(adType, 'idle');
       Alert.alert(
         '广告加载失败',
         `${getAdTypeDisplayName(adType)}加载失败，请检查网络连接后重试。`,
@@ -285,6 +276,33 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with App Title */}
+      <View style={styles.header}>
+        {/* Header Background Pattern */}
+        <View style={styles.headerBackground}>
+          <View style={styles.headerCircle1} />
+          <View style={styles.headerCircle2} />
+          <View style={styles.headerCircle3} />
+        </View>
+        
+        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.appTitle}>丁丁猫</Text>
+            <View style={styles.titleUnderline} />
+          </View>
+        </View>
+        
+        {/* Dev Tools Button (Debug Mode Only) - Hidden but accessible */}
+        {ENV_CONFIG.DEBUG_MODE && (
+          <TouchableOpacity
+            style={styles.hiddenDevToolsButton}
+            onPress={() => setShowDevTools(true)}
+          >
+            <View style={styles.hiddenDevToolsArea} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -298,78 +316,68 @@ const HomeScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Banner Ad - 顶部横幅广告 */}
-        <BannerAdComponent
-          userId={user.userId}
-          onAdClick={handleBannerAdClick}
-          onAdError={handleBannerAdError}
-        />
+
 
         {/* User Information Card */}
         <View style={styles.userCard}>
           <View style={styles.userInfo}>
-            <View style={styles.avatarContainer}>
-              {user.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatar} />
-              ) : (
-                <View style={styles.defaultAvatar}>
-                  <Text style={styles.avatarText}>
-                    {user.nickName?.charAt(0) || user.userName?.charAt(0) || '用'}
-                  </Text>
-                </View>
-              )}
-            </View>
             <View style={styles.userDetails}>
               <Text style={styles.userName}>{user.nickName || user.userName}</Text>
-              <Text style={styles.userSubtitle}>今日收益</Text>
-              <Text style={styles.todayRevenue}>
-                ¥{revenueData?.todayRevenue?.toFixed(2) || '0.00'}
-              </Text>
+              <Text style={styles.userSubtitle}>今日完播次数</Text>
+              <View style={styles.todayRevenueContainer}>
+                <Text style={styles.todayRevenue}>
+                  {revenueData?.todayCompletedCount || revenueData?.todayWatchCount || 0}
+                </Text>
+                <Text style={styles.todayRevenueUnit}>次</Text>
+              </View>
             </View>
-            {/* Dev Tools Button (Debug Mode Only) */}
-            {ENV_CONFIG.DEBUG_MODE && (
-              <TouchableOpacity
-                style={styles.devToolsButton}
-                onPress={() => setShowDevTools(true)}
-              >
-                <SimpleDevToolsIcon size={32} />
+            
+            <View style={styles.userActions}>
+              <TouchableOpacity style={styles.userActionButton}>
+                {/* <Text style={styles.userActionIcon}>📊</Text> */}
+                <Image source={Icon} />
               </TouchableOpacity>
-            )}
+            </View>
           </View>
-        </View>
-
-        {/* Quick Statistics Card */}
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>收益统计</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                ¥{revenueData?.totalRevenue?.toFixed(2) || '0.00'}
+          
+          {/* User Stats Row */}
+          <View style={styles.userStatsRow}>
+            <View style={styles.userStatItem}>
+              <View style={styles.userStatIconContainer}>
+                <Text style={styles.userStatIcon}>✅</Text>
+              </View>
+              <Text style={styles.userStatValue}>
+                {revenueData?.totalCompletedCount || revenueData?.totalWatchCount || 0}
               </Text>
-              <Text style={styles.statLabel}>总收益</Text>
+              <Text style={styles.userStatLabel}>总完播</Text>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {revenueData?.totalWatchCount || 0}
+            <View style={styles.userStatDivider} />
+            <View style={styles.userStatItem}>
+              <View style={styles.userStatIconContainer}>
+                <Text style={styles.userStatIcon}>💰</Text>
+              </View>
+              <Text style={styles.userStatValue}>
+                ¥{((revenueData?.totalCompletedCount || revenueData?.totalWatchCount || 0) * (revenueData?.singleRevenueAmount || 0.05)).toFixed(2)}
               </Text>
-              <Text style={styles.statLabel}>观看次数</Text>
+              <Text style={styles.userStatLabel}>预计收益</Text>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
+            <View style={styles.userStatDivider} />
+            <View style={styles.userStatItem}>
+              <View style={styles.userStatIconContainer}>
+                <Text style={styles.userStatIcon}>⏳</Text>
+              </View>
+              <Text style={styles.userStatValue}>
                 {revenueData?.remainingWatchCount || 0}
               </Text>
-              <Text style={styles.statLabel}>剩余次数</Text>
+              <Text style={styles.userStatLabel}>剩余次数</Text>
             </View>
           </View>
         </View>
 
-        {/* Ad Type Buttons */}
-        <View style={styles.adSection}>
-          <Text style={styles.sectionTitle}>广告类型</Text>
-          <Text style={styles.sectionSubtitle}>点击下方按钮观看广告获得收益</Text>
 
+
+        {/* Ad Buttons */}
+        <View style={styles.adSection}>
           <View style={styles.adButtonsContainer}>
             {AD_TYPE_CONFIG.map((config) => (
               <TouchableOpacity
@@ -377,10 +385,10 @@ const HomeScreen: React.FC = () => {
                 style={[
                   styles.adButton,
                   { borderLeftColor: config.color },
-                  loadingAdType === config.type && styles.adButtonLoading
+                  adButtonStates[config.type] !== 'idle' && styles.adButtonLoading
                 ]}
                 onPress={() => handleAdButtonPress(config.type)}
-                disabled={!!loadingAdType}
+                disabled={adButtonStates[config.type] !== 'idle'}
                 activeOpacity={0.7}
               >
                 <View style={styles.adButtonContent}>
@@ -392,8 +400,10 @@ const HomeScreen: React.FC = () => {
                     </View>
                   </View>
                   <View style={styles.adButtonRight}>
-                    {loadingAdType === config.type ? (
+                    {adButtonStates[config.type] === 'loading' ? (
                       <ActivityIndicator size="small" color={config.color} />
+                    ) : adButtonStates[config.type] === 'playing' ? (
+                      <Text style={[styles.adButtonArrow, { color: config.color }]}>⏸️</Text>
                     ) : (
                       <Text style={[styles.adButtonArrow, { color: config.color }]}>▶</Text>
                     )}
@@ -409,8 +419,8 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.infoTitle}>💡 温馨提示</Text>
           <Text style={styles.infoText}>
             • 每日观看次数有限，请合理安排{'\n'}
-            • 完整观看视频广告可获得更多收益{'\n'}
-            • 收益将在广告播放完成后立即到账
+            • 完整观看广告可获得观看次数统计{'\n'}
+            • 每次完播可获得 ¥{revenueData?.singleRevenueAmount?.toFixed(2) || '0.05'} 收益
           </Text>
         </View>
       </ScrollView>
@@ -427,8 +437,107 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: '#F8FAFC',
   },
+  
+  // Header Styles
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.03,
+  },
+  headerCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#3B82F6',
+    top: -40,
+    left: -20,
+  },
+  headerCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#10B981',
+    top: -10,
+    right: -10,
+  },
+  headerCircle3: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F59E0B',
+    bottom: -20,
+    left: '50%',
+    marginLeft: -30,
+  },
+  headerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  appTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1E293B',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  titleUnderline: {
+    width: 24,
+    height: 2,
+    backgroundColor: '#3B82F6',
+    borderRadius: 1,
+    marginTop: 4,
+  },
+  appSubtitle: {
+    fontSize: 16,
+    color: '#64748B',
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  hiddenDevToolsButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hiddenDevToolsArea: {
+    width: 20,
+    height: 20,
+    backgroundColor: 'transparent',
+  },
+  
   scrollView: {
     flex: 1,
   },
@@ -473,39 +582,22 @@ const styles = StyleSheet.create({
   userCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 12,
-    padding: 20,
+    marginTop: 20,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    overflow: 'hidden',
   },
+
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  avatarContainer: {
-    marginRight: 16,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-  },
-  defaultAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#1890FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
+    paddingHorizontal: 34,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   userDetails: {
     flex: 1,
@@ -513,115 +605,121 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333333',
+    color: '#1F2937',
     marginBottom: 4,
   },
   userSubtitle: {
     fontSize: 14,
-    color: '#666666',
-    marginBottom: 4,
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  todayRevenueContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   todayRevenue: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#52C41A',
+    color: '#059669',
   },
-  devToolsButton: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    overflow: 'hidden', // 确保图片不会超出圆形边界
-  },
-
-
-
-  // Stats Card Styles
-  statsCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statsTitle: {
+  todayRevenueUnit: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333333',
-    marginBottom: 16,
+    color: '#6B7280',
+    marginLeft: 4,
   },
-  statsRow: {
+  userActions: {
+    alignItems: 'center',
+  },
+  userActionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userActionIcon: {
+    fontSize: 20,
+  },
+  userStatsRow: {
     flexDirection: 'row',
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  userStatItem: {
+    width: '30%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 60,
+  },
+  userStatIconContainer: {
+    marginBottom: 2,
     alignItems: 'center',
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
+  userStatIcon: {
+    fontSize: 20,
   },
-  statValue: {
-    fontSize: 18,
+  userStatValue: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#333333',
+    color: '#1F2937',
     marginBottom: 4,
+    textAlign: 'center',
   },
-  statLabel: {
+  userStatLabel: {
     fontSize: 12,
-    color: '#666666',
+    color: '#6B7280',
+    fontWeight: '500',
+    textAlign: 'center',
   },
-  statDivider: {
+  userStatDivider: {
     width: 1,
+    backgroundColor: '#E5E7EB',
     height: 40,
-    backgroundColor: '#E8E8E8',
-    marginHorizontal: 16,
   },
+
+
+
+
 
   // Ad Section Styles
   adSection: {
     marginHorizontal: 16,
-    marginTop: 12,
+    marginTop: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 4,
+    color: '#1F2937',
+    marginBottom: 6,
   },
   sectionSubtitle: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 16,
+    fontSize: 15,
+    color: '#6B7280',
+    marginBottom: 20,
+    fontWeight: '500',
   },
   adButtonsContainer: {
-    gap: 12,
+    gap: 16,
   },
   adButton: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    borderLeftWidth: 4,
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   adButtonLoading: {
-    opacity: 0.7,
+    opacity: 0.6,
+    transform: [{ scale: 0.98 }],
   },
   adButtonContent: {
     flexDirection: 'row',
@@ -634,27 +732,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   adButtonIcon: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: 32,
+    marginRight: 16,
   },
   adButtonText: {
     flex: 1,
   },
   adButtonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 2,
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 4,
   },
   adButtonDescription: {
-    fontSize: 12,
-    color: '#666666',
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   adButtonRight: {
-    marginLeft: 12,
+    marginLeft: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   adButtonArrow: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 
@@ -662,25 +767,28 @@ const styles = StyleSheet.create({
   infoCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 12,
+    marginTop: 20,
+    borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
   },
   infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 12,
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 16,
   },
   infoText: {
     fontSize: 14,
-    color: '#666666',
-    lineHeight: 20,
+    color: '#6B7280',
+    lineHeight: 22,
+    fontWeight: '500',
   },
 });
 

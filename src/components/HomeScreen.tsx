@@ -262,13 +262,13 @@ const HomeScreen: React.FC = () => {
     if (bannerAdRef.current) {
       bannerAdRef.current.destroyAd();
     }
-    
+
     setBannerAdState({
       isVisible: false,
       isLoading: false,
       error: null,
     });
-    
+
     console.log('Banner ad closed');
   }, []);
 

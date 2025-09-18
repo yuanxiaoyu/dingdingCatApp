@@ -126,22 +126,7 @@ class AdService {
     });
   }
 
-  /**
-   * Request banner ad specifically
-   * 
-   * @param userId - User ID
-   * @param channelCode - Optional channel code
-   * @returns Promise<AdResponse> - Banner ad content
-   */
-  public async requestBannerAd(userId: number, channelCode?: string): Promise<AdResponse> {
-    return this.requestAd({
-      userId,
-      appKey: ENV_CONFIG.APP_KEY,
-      adType: AdType.BANNER,
-      channelCode,
-      deviceType: 'android', // TODO: Get from device info
-    });
-  }
+
 
   /**
    * Report ad show event when ad starts displaying
@@ -192,6 +177,15 @@ class AdService {
     try {
       if (ENV_CONFIG.DEBUG_MODE) {
         console.log('AdService.reportAdClick:', request);
+      }
+
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock ad click report');
+        }
+        return await mockService.mockAdClick(request.userId, request.adId, request.adType);
       }
 
       await apiClient.post(`${this.baseUrl}/click`, {
@@ -278,6 +272,21 @@ class AdService {
         console.log('AdService.reportAdSkip:', request);
       }
 
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock ad skip report');
+        }
+        return await mockService.mockAdSkip(
+          request.userId, 
+          request.adId, 
+          request.adType, 
+          request.playDuration, 
+          request.skipReason || 'user_skip'
+        );
+      }
+
       await apiClient.post(`${this.baseUrl}/skip`, {
         userId: request.userId,
         appKey: request.appKey,
@@ -308,6 +317,21 @@ class AdService {
     try {
       if (ENV_CONFIG.DEBUG_MODE) {
         console.log('AdService.reportAdClose:', request);
+      }
+
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock ad close report');
+        }
+        return await mockService.mockAdClose(
+          request.userId, 
+          request.adId, 
+          request.adType, 
+          request.playDuration, 
+          request.closeReason || 'user_close'
+        );
       }
 
       await apiClient.post(`${this.baseUrl}/close`, {
@@ -602,12 +626,35 @@ class AdService {
   }
 
   /**
-   * Get all supported ad types
+   * Get all supported ad types (excluding Banner)
    * 
    * @returns AdType[] - Array of supported ad types
    */
   public getSupportedAdTypes(): AdType[] {
-    return Object.values(AdType);
+    return [AdType.SPLASH, AdType.REWARD_VIDEO, AdType.INTERSTITIAL];
+  }
+
+  /**
+   * Get single revenue amount from risk config
+   * 
+   * @returns Promise<number> - Single revenue amount per completion
+   */
+  public async getSingleRevenueAmount(): Promise<number> {
+    try {
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        const riskConfig = await mockService.mockGetRiskConfig(ENV_CONFIG.APP_KEY);
+        return (riskConfig.singleRevenueAmount || 5) / 100; // Convert cents to yuan
+      }
+
+      // In real mode, would get from risk control service
+      // For now, return default value
+      return 0.05; // 5 cents = 0.05 yuan
+    } catch (error) {
+      console.error('Failed to get single revenue amount:', error);
+      return 0.05; // Default fallback
+    }
   }
 
   /**
