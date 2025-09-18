@@ -6,6 +6,27 @@ import apiClient from './apiClient';
 import { DeviceInfo as DeviceInfoType, DeviceReportResponse, ApiResponse } from '../types';
 import { ENV_CONFIG } from '../config/env';
 
+/**
+ * 安全调用DeviceInfo方法的工具函数
+ * 处理同步和异步方法的兼容性问题
+ */
+const callDeviceInfoSafely = async <T>(
+  method: () => T | Promise<T>, 
+  fallback: T
+): Promise<T> => {
+  try {
+    const result = method();
+    // 检查是否为Promise
+    if (result && typeof (result as any).then === 'function') {
+      return await (result as Promise<T>);
+    }
+    // 同步结果
+    return result as T;
+  } catch (error) {
+    return fallback;
+  }
+};
+
 // Storage keys for device info caching
 const STORAGE_KEYS = {
   DEVICE_INFO: '@dingdingcat/device_info',
@@ -172,11 +193,11 @@ class DeviceService {
   }> {
     try {
       const [model, brand, systemName, systemVersion, deviceId] = await Promise.all([
-        DeviceInfo.getModel(),
-        DeviceInfo.getBrand(),
-        DeviceInfo.getSystemName(),
-        DeviceInfo.getSystemVersion(),
-        DeviceInfo.getDeviceId(),
+        callDeviceInfoSafely(() => DeviceInfo.getModel(), 'Unknown'),
+        callDeviceInfoSafely(() => DeviceInfo.getBrand(), 'Unknown'),
+        callDeviceInfoSafely(() => DeviceInfo.getSystemName(), Platform.OS),
+        callDeviceInfoSafely(() => DeviceInfo.getSystemVersion(), 'Unknown'),
+        callDeviceInfoSafely(() => DeviceInfo.getDeviceId(), ''),
       ]);
 
       return {
@@ -210,15 +231,15 @@ class DeviceService {
         suspiciousIndicators: [] as string[],
       };
 
-      // Collect device info for analysis
+      // Collect device info for analysis - handle both sync and async methods
       const [brand, model, systemName, isEmulator] = await Promise.all([
-        DeviceInfo.getBrand().catch((_error: any) => {
+        callDeviceInfoSafely(() => DeviceInfo.getBrand(), 'Unknown').catch(() => {
           detectionDetails.suspiciousIndicators.push('detection-error');
           return 'Unknown';
         }),
-        DeviceInfo.getModel().catch(() => 'Unknown'),
-        DeviceInfo.getSystemName().catch(() => Platform.OS),
-        DeviceInfo.isEmulator().catch(() => false),
+        callDeviceInfoSafely(() => DeviceInfo.getModel(), 'Unknown'),
+        callDeviceInfoSafely(() => DeviceInfo.getSystemName(), Platform.OS),
+        callDeviceInfoSafely(() => DeviceInfo.isEmulator(), false),
       ]);
 
       detectionDetails.deviceInfo = { brand, model, systemName };
@@ -373,13 +394,13 @@ class DeviceService {
         batteryLevel,
         isCharging,
       ] = await Promise.all([
-        DeviceInfo.getTotalMemory().catch(() => undefined),
-        DeviceInfo.getUsedMemory().catch(() => undefined),
-        DeviceInfo.getTotalDiskCapacity().catch(() => undefined),
-        DeviceInfo.getFreeDiskStorage().catch(() => undefined),
-        DeviceInfo.getCarrier().catch(() => undefined),
-        DeviceInfo.getBatteryLevel().catch(() => undefined),
-        DeviceInfo.isBatteryCharging().catch(() => undefined),
+        callDeviceInfoSafely(() => DeviceInfo.getTotalMemory(), undefined),
+        callDeviceInfoSafely(() => DeviceInfo.getUsedMemory(), undefined),
+        callDeviceInfoSafely(() => DeviceInfo.getTotalDiskCapacity(), undefined),
+        callDeviceInfoSafely(() => DeviceInfo.getFreeDiskStorage(), undefined),
+        callDeviceInfoSafely(() => DeviceInfo.getCarrier(), undefined),
+        callDeviceInfoSafely(() => DeviceInfo.getBatteryLevel(), undefined),
+        callDeviceInfoSafely(() => DeviceInfo.isBatteryCharging(), undefined),
       ]);
 
       // Convert bytes to MB
@@ -433,8 +454,8 @@ class DeviceService {
   }> {
     try {
       const [version, buildNumber] = await Promise.all([
-        DeviceInfo.getVersion(),
-        DeviceInfo.getBuildNumber(),
+        callDeviceInfoSafely(() => DeviceInfo.getVersion(), '1.0.0'),
+        callDeviceInfoSafely(() => DeviceInfo.getBuildNumber(), '1'),
       ]);
 
       return {
@@ -703,8 +724,11 @@ class DeviceService {
   private async generateFallbackDeviceId(): Promise<string> {
     try {
       // Try to get unique ID first
-      const uniqueId = await DeviceInfo.getUniqueId();
-      return uniqueId;
+      const uniqueId = await callDeviceInfoSafely(() => DeviceInfo.getUniqueId(), '');
+      if (uniqueId) {
+        return uniqueId;
+      }
+      throw new Error('No unique ID available');
     } catch (error) {
       // Generate a fallback ID based on available info
       const timestamp = Date.now();

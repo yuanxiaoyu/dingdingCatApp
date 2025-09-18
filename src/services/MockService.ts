@@ -521,9 +521,499 @@ class MockService {
       envConfig: this.getEnvConfig(),
     };
   }
+
+  /**
+   * 模拟微信登录接口 (/auth/wechat/login)
+   */
+  public async mockWechatLogin(appKey: string, code: string): Promise<LoginResponse> {
+    await this.simulateNetworkDelay(500, 1000);
+    
+    const mockUser = this.generateMockUser();
+    
+    return {
+      accessToken: `mock_access_token_${Date.now()}`,
+      tokenType: 'Bearer',
+      expiresIn: 1800,
+      userId: mockUser.userId,
+      userName: mockUser.userName,
+      nickName: mockUser.nickName,
+      avatar: mockUser.avatar,
+      appKey: appKey,
+    };
+  }
+
+  /**
+   * 模拟微信注册接口 (/auth/wechat/register)
+   */
+  public async mockWechatRegister(appKey: string, code: string, nickName?: string, phoneNumber?: string): Promise<User> {
+    await this.simulateNetworkDelay(800, 1200);
+    
+    const mockUser = this.generateMockUser();
+    
+    return {
+      userId: mockUser.userId,
+      userName: mockUser.userName,
+      nickName: nickName || mockUser.nickName,
+      avatar: mockUser.avatar,
+      phoneNumber: phoneNumber || mockUser.phoneNumber,
+      email: mockUser.email,
+      sex: mockUser.sex,
+      wechatOpenId: mockUser.wechatOpenId,
+      registerChannel: mockUser.registerChannel,
+      appKey: appKey,
+    };
+  }
+
+  /**
+   * 模拟获取用户信息接口 (/auth/userInfo)
+   */
+  public async mockGetUserInfo(): Promise<User> {
+    await this.simulateNetworkDelay(200, 400);
+    const mockUser = this.generateMockUser();
+    
+    return {
+      userId: mockUser.userId,
+      userName: mockUser.userName,
+      nickName: mockUser.nickName,
+      avatar: mockUser.avatar,
+      phoneNumber: mockUser.phoneNumber,
+      email: mockUser.email,
+      sex: mockUser.sex,
+      wechatOpenId: mockUser.wechatOpenId,
+      registerChannel: mockUser.registerChannel,
+      appKey: mockUser.appKey,
+    };
+  }
+
+  /**
+   * 模拟刷新Token接口 (/auth/refresh)
+   */
+  public async mockRefreshToken(refreshToken: string): Promise<LoginResponse> {
+    await this.simulateNetworkDelay(300, 600);
+    
+    console.log('MockService: 刷新Token成功');
+    
+    return {
+      user: await this.mockGetUserInfo(),
+      accessToken: `mock_access_token_${Date.now()}`,
+      refreshToken: `mock_refresh_token_${Date.now()}`,
+      tokenType: 'Bearer',
+      expiresIn: 7200,
+    };
+  }
+
+  /**
+   * 模拟登出接口 (/auth/logout)
+   */
+  public async mockLogout(): Promise<void> {
+    await this.simulateNetworkDelay(200, 400);
+    console.log('MockService: 用户登出成功');
+  }
+
+  /**
+   * 模拟应用配置接口 (/config)
+   */
+  public async mockGetAppConfig(appKey?: string): Promise<AppConfig> {
+    await this.simulateNetworkDelay(300, 600);
+    
+    return {
+      appKey: appKey,
+      appName: '丁丁猫广告收益管理',
+      appType: 'mobile',
+      appDesc: '专业的广告收益管理应用',
+      status: '0',
+      wechatAppId: ENV_CONFIG.WECHAT_APP_ID,
+      channelConfig: JSON.stringify({ defaultChannel: 'pangle' }),
+      riskConfig: JSON.stringify({ rootDetectionEnabled: true }),
+      serverTime: Date.now(),
+      configVersion: Date.now().toString(),
+      channels: [
+        {
+          channelCode: 'pangle_001',
+          channelName: '穿山甲渠道',
+          channelType: 'PANGLE',
+          status: '0',
+        }
+      ],
+    };
+  }
+
+  /**
+   * 模拟风控配置接口 (/config/risk)
+   */
+  public async mockGetRiskConfig(appKey: string): Promise<RiskConfig> {
+    await this.simulateNetworkDelay(200, 400);
+    
+    return {
+      appKey: appKey,
+      serverTime: Date.now(),
+      configVersion: Date.now().toString(),
+      rootDetectionEnabled: true,
+      emulatorDetectionEnabled: true,
+      deviceFingerprintEnabled: true,
+      adIntervalCheckEnabled: true,
+      adIntervalSeconds: 30,
+      sameIpUserLimit: 5,
+      sameIpLimitEnabled: true,
+      ipLocationCheckEnabled: false,
+      loginFrequencyLimit: 10,
+      loginFrequencyWindow: 10,
+      loginFrequencyEnabled: true,
+      blacklistCheckEnabled: true,
+      riskLevel: 2,
+    };
+  }
+
+  /**
+   * 模拟渠道配置接口 (/config/channel)
+   */
+  public async mockGetChannelConfig(appKey: string): Promise<ChannelConfigResponse> {
+    await this.simulateNetworkDelay(200, 400);
+    
+    return {
+      appKey: appKey,
+      channelConfig: JSON.stringify({ defaultChannel: 'pangle' }),
+      serverTime: Date.now(),
+      configVersion: Date.now().toString(),
+      defaultChannelCode: 'pangle_001',
+      channels: [
+        {
+          channelId: 1,
+          channelCode: 'pangle_001',
+          channelName: '穿山甲渠道',
+          channelType: 'PANGLE',
+          channelDesc: '穿山甲广告渠道',
+          status: '0',
+          contactPerson: '张三',
+          contactPhone: '13800138000',
+          contactEmail: 'zhangsan@example.com',
+          isDefault: true,
+        }
+      ],
+    };
+  }
+
+  /**
+   * 模拟广告请求接口 (/ad/request)
+   */
+  public async mockAdRequest(userId: number, adType: AdType): Promise<AdResponse> {
+    await this.simulateNetworkDelay(500, 1000);
+    
+    const adConfig = await this.getMockAdConfig();
+    let adId = '';
+    let expectedReward = 0;
+    
+    switch (adType) {
+      case AdType.SPLASH:
+        adId = adConfig.splashAdConfig?.adId || 'mock_splash_ad';
+        expectedReward = 10;
+        break;
+      case AdType.REWARD_VIDEO:
+        adId = adConfig.rewardVideoAdConfig?.adId || 'mock_video_ad';
+        expectedReward = 50;
+        break;
+      case AdType.INTERSTITIAL:
+        adId = adConfig.interstitialAdConfig?.adId || 'mock_interstitial_ad';
+        expectedReward = 20;
+        break;
+      case AdType.BANNER:
+        adId = adConfig.bannerAdConfig?.adId || 'mock_banner_ad';
+        expectedReward = 5;
+        break;
+    }
+    
+    return {
+      adId: adId,
+      adType: adType,
+      adTitle: `丁丁猫${adType}广告 - Mock模拟`,
+      adImageUrl: `https://picsum.photos/400/300?random=${Date.now()}`,
+      adClickUrl: 'https://www.dingdingcat.com',
+      playDuration: adType === AdType.REWARD_VIDEO ? 30 : 5,
+      expectedReward: expectedReward,
+      configParams: {
+        minPlayDuration: adType === AdType.REWARD_VIDEO ? 15 : 0,
+        completeRewardMultiplier: 1.0,
+        clickRewardMultiplier: 1.2,
+        adInterval: 60,
+        dailyWatchLimit: 100,
+      },
+    };
+  }
+
+  /**
+   * 模拟收益统计接口 (/ad/revenue)
+   */
+  public async mockGetRevenue(userId: number): Promise<RevenueData> {
+    await this.simulateNetworkDelay(300, 600);
+    
+    const totalWatchCount = 156 + Math.floor(Math.random() * 50);
+    const totalRevenue = totalWatchCount * 0.1 + Math.random() * 5;
+    const todayWatchCount = 23 + Math.floor(Math.random() * 10);
+    const todayRevenue = todayWatchCount * 0.1 + Math.random() * 1;
+    
+    return {
+      userId: userId,
+      userName: `用户${userId}`,
+      totalRevenue: Number(totalRevenue.toFixed(2)),
+      totalWatchCount: totalWatchCount,
+      todayRevenue: Number(todayRevenue.toFixed(2)),
+      yesterdayRevenue: Number((todayRevenue * 0.8).toFixed(2)),
+      weekRevenue: Number((totalRevenue * 0.8).toFixed(2)),
+      monthRevenue: totalRevenue,
+      todayWatchCount: todayWatchCount,
+      yesterdayWatchCount: Math.floor(todayWatchCount * 0.8),
+      weekWatchCount: Math.floor(totalWatchCount * 0.8),
+      monthWatchCount: totalWatchCount,
+      remainingWatchCount: 100 - todayWatchCount,
+      avgRevenuePerWatch: Number((totalRevenue / totalWatchCount).toFixed(3)),
+      lastWatchTime: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+      accountStatus: 'normal',
+      withdrawableAmount: totalRevenue,
+      frozenAmount: 0.00,
+    };
+  }
+
+  /**
+   * 模拟广告历史接口 (/ad/history)
+   */
+  public async mockGetAdHistory(userId: number, pageNum: number = 1, pageSize: number = 20): Promise<AdHistoryResponse> {
+    await this.simulateNetworkDelay(400, 800);
+    
+    const total = 156;
+    const historyList = [];
+    
+    for (let i = 0; i < Math.min(pageSize, total - (pageNum - 1) * pageSize); i++) {
+      const adTypes = [AdType.SPLASH, AdType.REWARD_VIDEO, AdType.INTERSTITIAL, AdType.BANNER];
+      const adType = adTypes[Math.floor(Math.random() * adTypes.length)];
+      const isCompleted = Math.random() > 0.2;
+      const isClicked = Math.random() > 0.7;
+      const playDuration = adType === AdType.REWARD_VIDEO ? 30 : Math.floor(Math.random() * 10) + 5;
+      
+      historyList.push({
+        statId: 1000 + i + (pageNum - 1) * pageSize,
+        adId: `AD_${Date.now()}_${i}`,
+        adType: adType,
+        playDuration: playDuration,
+        isClicked: isClicked,
+        isSkipped: !isCompleted,
+        isCompleted: isCompleted,
+        stayDuration: playDuration + Math.floor(Math.random() * 5),
+        rewardAmount: isCompleted ? (adType === AdType.REWARD_VIDEO ? 0.05 : 0.01) : 0,
+        playTime: new Date(Date.now() - Math.random() * 7 * 24 * 3600000).toISOString(),
+        deviceType: 'android',
+        statusDescription: isCompleted ? '完播' : '跳过',
+      });
+    }
+    
+    return {
+      total: total,
+      pageNum: pageNum,
+      pageSize: pageSize,
+      historyList: historyList,
+    };
+  }
+
+  /**
+   * 模拟设备信息上报接口 (/user/device)
+   */
+  public async mockReportDeviceInfo(userId: number, deviceInfo: any): Promise<{ userId: number; appKey: string; reportTime: number }> {
+    await this.simulateNetworkDelay(200, 500);
+    
+    console.log('MockService: 设备信息上报成功 - 用户:', userId, deviceInfo);
+    
+    return {
+      userId: userId,
+      appKey: ENV_CONFIG.APP_KEY,
+      reportTime: Date.now(),
+    };
+  }
+
+  /**
+   * 模拟设备信息上报接口 (/user/device) - 别名方法
+   */
+  public async mockReportDevice(data: any): Promise<{ userId: number; appKey: string; reportTime: number }> {
+    return this.mockReportDeviceInfo(data.userId || 1001, data);
+  }
+
+  /**
+   * 模拟广告展示回调 (/ad/show)
+   */
+  public async mockAdShow(userId: number, adId: string, adType: AdType): Promise<void> {
+    await this.simulateNetworkDelay(100, 300);
+    console.log(`MockService: 广告展示上报 - 用户: ${userId}, 广告: ${adId}, 类型: ${adType}`);
+  }
+
+  /**
+   * 模拟广告点击回调 (/ad/click)
+   */
+  public async mockAdClick(userId: number, adId: string, adType: AdType): Promise<void> {
+    await this.simulateNetworkDelay(100, 300);
+    console.log(`MockService: 广告点击上报 - 用户: ${userId}, 广告: ${adId}, 类型: ${adType}`);
+  }
+
+  /**
+   * 模拟广告完播回调 (/ad/complete)
+   */
+  public async mockAdComplete(userId: number, adId: string, adType: AdType, playDuration: number, isClicked: boolean): Promise<number> {
+    await this.simulateNetworkDelay(200, 500);
+    
+    let reward = 0;
+    switch (adType) {
+      case AdType.SPLASH:
+        reward = 0.01;
+        break;
+      case AdType.REWARD_VIDEO:
+        reward = 0.05;
+        break;
+      case AdType.INTERSTITIAL:
+        reward = 0.02;
+        break;
+      case AdType.BANNER:
+        reward = 0.005;
+        break;
+    }
+    
+    if (isClicked) {
+      reward *= 1.2; // 点击奖励倍数
+    }
+    
+    console.log(`MockService: 广告完播上报 - 用户: ${userId}, 广告: ${adId}, 类型: ${adType}, 奖励: ${reward}`);
+    return Number(reward.toFixed(3));
+  }
+
+  /**
+   * 模拟广告跳过回调 (/ad/skip)
+   */
+  public async mockAdSkip(userId: number, adId: string, adType: AdType, playDuration: number, skipReason: string): Promise<void> {
+    await this.simulateNetworkDelay(100, 300);
+    console.log(`MockService: 广告跳过上报 - 用户: ${userId}, 广告: ${adId}, 类型: ${adType}, 时长: ${playDuration}, 原因: ${skipReason}`);
+  }
+
+  /**
+   * 模拟广告关闭回调 (/ad/close)
+   */
+  public async mockAdClose(userId: number, adId: string, adType: AdType, playDuration: number, closeReason: string): Promise<void> {
+    await this.simulateNetworkDelay(100, 300);
+    console.log(`MockService: 广告关闭上报 - 用户: ${userId}, 广告: ${adId}, 类型: ${adType}, 时长: ${playDuration}, 原因: ${closeReason}`);
+  }
+
+  /**
+   * 模拟批量上报播放数据 (/ad/batchReport)
+   */
+  public async mockBatchReport(userId: number, playDataList: any[]): Promise<number> {
+    await this.simulateNetworkDelay(500, 1000);
+    
+    console.log(`MockService: 批量上报播放数据 - 用户: ${userId}, 数据条数: ${playDataList.length}`);
+    playDataList.forEach((data, index) => {
+      console.log(`  ${index + 1}. 类型: ${data.adType}, 时长: ${data.playDuration}s, 点击: ${data.isClicked}, 跳过: ${data.isSkipped}`);
+    });
+    
+    return playDataList.length;
+  }
+
+  /**
+   * 验证应用启动流程的完整性
+   */
+  public async validateAppStartupFlow(): Promise<{
+    success: boolean;
+    message: string;
+    steps: Array<{ step: string; success: boolean; message: string; data?: any }>;
+  }> {
+    const steps = [];
+    let allSuccess = true;
+
+    try {
+      // 步骤1: 用户认证
+      console.log('验证步骤1: 用户认证');
+      const loginResult = await this.mockWechatLogin(ENV_CONFIG.APP_KEY, 'mock_code_123');
+      steps.push({
+        step: '用户认证',
+        success: true,
+        message: '微信登录模拟成功',
+        data: { userId: loginResult.userId, userName: loginResult.userName }
+      });
+
+      // 步骤2: 应用配置加载
+      console.log('验证步骤2: 应用配置加载');
+      const appConfig = await this.mockGetAppConfig(ENV_CONFIG.APP_KEY);
+      steps.push({
+        step: '应用配置加载',
+        success: true,
+        message: '应用配置获取成功',
+        data: { appName: appConfig.appName, configVersion: appConfig.configVersion }
+      });
+
+      // 步骤3: 广告配置加载
+      console.log('验证步骤3: 广告配置加载');
+      const adConfig = await this.getMockAdConfig();
+      steps.push({
+        step: '广告配置加载',
+        success: true,
+        message: '广告配置获取成功',
+        data: { 
+          splashEnabled: adConfig.splashAdConfig?.enabled,
+          bannerEnabled: adConfig.bannerAdConfig?.enabled
+        }
+      });
+
+      // 步骤4: 风控配置加载
+      console.log('验证步骤4: 风控配置加载');
+      const riskConfig = await this.mockGetRiskConfig(ENV_CONFIG.APP_KEY);
+      steps.push({
+        step: '风控配置加载',
+        success: true,
+        message: '风控配置获取成功',
+        data: { riskLevel: riskConfig.riskLevel }
+      });
+
+      // 步骤5: 用户信息获取
+      console.log('验证步骤5: 用户信息获取');
+      const userInfo = await this.mockGetUserInfo();
+      steps.push({
+        step: '用户信息获取',
+        success: true,
+        message: '用户信息获取成功',
+        data: { nickName: userInfo.nickName }
+      });
+
+      // 步骤6: 收益数据获取
+      console.log('验证步骤6: 收益数据获取');
+      const revenueData = await this.mockGetRevenue(loginResult.userId);
+      steps.push({
+        step: '收益数据获取',
+        success: true,
+        message: '收益数据获取成功',
+        data: { totalRevenue: revenueData.totalRevenue, todayRevenue: revenueData.todayRevenue }
+      });
+
+      // 步骤7: Banner广告请求
+      console.log('验证步骤7: Banner广告请求');
+      const bannerAd = await this.mockAdRequest(loginResult.userId, AdType.BANNER);
+      steps.push({
+        step: 'Banner广告请求',
+        success: true,
+        message: 'Banner广告请求成功',
+        data: { adId: bannerAd.adId, adTitle: bannerAd.adTitle }
+      });
+
+    } catch (error) {
+      allSuccess = false;
+      steps.push({
+        step: '流程验证',
+        success: false,
+        message: `验证过程中发生错误: ${(error as Error).message}`
+      });
+    }
+
+    return {
+      success: allSuccess,
+      message: allSuccess ? '应用启动流程验证成功，所有Mock接口正常工作' : '应用启动流程验证失败，存在问题',
+      steps: steps
+    };
+  }
 }
 
-// Create singleton instance
+// 创建单例实例
 const mockService = new MockService();
 
 export default mockService;

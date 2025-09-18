@@ -39,6 +39,8 @@ import { ENV_CONFIG } from '../config/env';
 import IntegratedAdService, { AdEventCallbacks } from '../services/IntegratedAdService';
 import DevTools from '../components/DevTools';
 import SimpleDevToolsIcon from '../components/SimpleDevToolsIcon';
+import BannerAdComponent from '../components/BannerAdComponent';
+import SimpleBannerAd from '../components/SimpleBannerAd';
 
 
 // Ad type configuration for buttons
@@ -179,6 +181,24 @@ const HomeScreen: React.FC = () => {
     },
   }), [loadUserRevenue]);
 
+  // Handle banner ad click
+  const handleBannerAdClick = useCallback((adData: any) => {
+    console.log('Banner ad clicked:', adData);
+    Alert.alert(
+      '广告点击',
+      `您点击了Banner广告！\n广告ID: ${adData.adId}\n奖励: ¥${adData.rewardAmount?.toFixed(2) || '0.00'}`,
+      [
+        { text: '确定', onPress: () => loadUserRevenue() }
+      ]
+    );
+  }, [loadUserRevenue]);
+
+  // Handle banner ad error
+  const handleBannerAdError = useCallback((error: Error) => {
+    console.error('Banner ad error:', error);
+    // 静默处理Banner广告错误，不影响用户体验
+  }, []);
+
   // Handle ad button press with integrated service
   const handleAdButtonPress = useCallback(async (adType: AdType) => {
     if (!user || !isAuthenticated) {
@@ -278,6 +298,13 @@ const HomeScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Banner Ad - 顶部横幅广告 */}
+        <BannerAdComponent
+          userId={user.userId}
+          onAdClick={handleBannerAdClick}
+          onAdError={handleBannerAdError}
+        />
+
         {/* User Information Card */}
         <View style={styles.userCard}>
           <View style={styles.userInfo}>

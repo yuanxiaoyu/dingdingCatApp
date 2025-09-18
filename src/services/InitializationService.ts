@@ -8,6 +8,7 @@ import mockService from './MockService';
 import PangleAdService from './PangleAdService';
 import AdConfig from '../config/adConfig.js';
 import { ENV_CONFIG } from '../config/env';
+import mockModeController from '../utils/mockModeController';
 
 // Storage keys for initialization tracking
 const INIT_STORAGE_KEYS = {
@@ -91,6 +92,8 @@ class InitializationService {
       // Initialize mock service if in development
       if (ENV_CONFIG.DEBUG_MODE) {
         await mockService.initialize();
+        // Initialize mock mode controller
+        await mockModeController.initialize();
       }
 
       // Phase 1: Authentication check

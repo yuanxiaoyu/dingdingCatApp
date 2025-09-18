@@ -168,7 +168,7 @@ const SplashAdScreen: React.FC<SplashAdScreenProps> = ({
         adTitle: '丁丁猫开屏广告 - Mock模拟',
         adImageUrl: '', // Mock模式不使用真实图片
         adClickUrl: 'https://www.dingdingcat.com',
-        rewardAmount: 10,
+
         playDuration: adConfig.splashAdConfig.timeout || 5000,
         expectedReward: 10,
         configParams: {},
@@ -220,7 +220,7 @@ const SplashAdScreen: React.FC<SplashAdScreenProps> = ({
         adTitle: '丁丁猫广告',
         adImageUrl: '',
         adClickUrl: '',
-        rewardAmount: 0,
+
         playDuration: 3000,
         expectedReward: 0,
         configParams: {},
@@ -444,30 +444,37 @@ const SplashAdScreen: React.FC<SplashAdScreenProps> = ({
    */
   const handleAdComplete = async () => {
     try {
-      if (!state.adData) return;
-
-      console.log('SplashAdScreen: Ad completed');
+      console.log('SplashAdScreen: Ad completed - starting completion process');
 
       // Report completion to server (if not mock mode)
       const isMockMode = mockService.isMockModeEnabled();
-      if (!isMockMode) {
-        const reward = await adService.reportAdCompleteNow(
-          userId,
-          state.adData.adId,
-          AdType.SPLASH,
-          5, // 5 seconds play duration
-          false // not clicked
-        );
-        console.log('SplashAdScreen: Ad completion reported, reward:', reward);
+      if (!isMockMode && state.adData) {
+        try {
+          const reward = await adService.reportAdCompleteNow(
+            userId,
+            state.adData.adId,
+            AdType.SPLASH,
+            5, // 5 seconds play duration
+            false // not clicked
+          );
+          console.log('SplashAdScreen: Ad completion reported, reward:', reward);
+        } catch (reportError) {
+          console.error('SplashAdScreen: Failed to report ad completion:', reportError);
+          // Continue with completion even if reporting fails
+        }
       }
 
       // Cleanup and complete
       cleanup();
+      
+      console.log('SplashAdScreen: Calling onAdComplete callback');
       onAdComplete();
 
     } catch (error) {
       console.error('SplashAdScreen: Error handling ad completion:', error);
-      handleError(error as Error);
+      // Even if there's an error, try to complete
+      cleanup();
+      onAdComplete();
     }
   };
 

@@ -2,6 +2,7 @@ import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import apiClient from './apiClient';
+import mockService from './MockService';
 import { RiskConfig, ApiResponse } from '../types';
 import { ENV_CONFIG } from '../config/env';
 
@@ -160,6 +161,17 @@ class RiskControlService {
    */
   public async getRiskConfig(appKey?: string): Promise<RiskConfig> {
     try {
+      // 检查是否启用Mock模式
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('RiskControlService: 使用Mock风控配置');
+        }
+        const mockRiskConfig = await mockService.mockGetRiskConfig(appKey || ENV_CONFIG.APP_KEY);
+        this.riskConfig = mockRiskConfig;
+        return mockRiskConfig;
+      }
+
       const response = await apiClient.get<RiskConfig>('/config/risk', {
         params: {
           appKey: appKey || ENV_CONFIG.APP_KEY,

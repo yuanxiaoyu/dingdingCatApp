@@ -8,6 +8,7 @@ import axios, {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ENV_CONFIG } from '../config/env';
 import { ApiResponse, ApiError, AuthTokens } from '../types';
+import { interceptApiRequest } from './apiInterceptor';
 
 // Storage keys for tokens
 const STORAGE_KEYS = {
@@ -457,6 +458,13 @@ class ApiClient {
     url: string, 
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
+    // 尝试Mock拦截
+    const mockResponse = await interceptApiRequest('GET', url, undefined, config?.params);
+    if (mockResponse) {
+      return mockResponse as ApiResponse<T>;
+    }
+    
+    // 执行真实API请求
     const response = await this.axiosInstance.get<ApiResponse<T>>(url, config);
     return response.data;
   }
@@ -469,6 +477,13 @@ class ApiClient {
     data?: any, 
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
+    // 尝试Mock拦截
+    const mockResponse = await interceptApiRequest('POST', url, data, config?.params);
+    if (mockResponse) {
+      return mockResponse as ApiResponse<T>;
+    }
+    
+    // 执行真实API请求
     const response = await this.axiosInstance.post<ApiResponse<T>>(url, data, config);
     return response.data;
   }
@@ -481,6 +496,13 @@ class ApiClient {
     data?: any, 
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
+    // 尝试Mock拦截
+    const mockResponse = await interceptApiRequest('PUT', url, data, config?.params);
+    if (mockResponse) {
+      return mockResponse as ApiResponse<T>;
+    }
+    
+    // 执行真实API请求
     const response = await this.axiosInstance.put<ApiResponse<T>>(url, data, config);
     return response.data;
   }
@@ -492,6 +514,13 @@ class ApiClient {
     url: string, 
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
+    // 尝试Mock拦截
+    const mockResponse = await interceptApiRequest('DELETE', url, undefined, config?.params);
+    if (mockResponse) {
+      return mockResponse as ApiResponse<T>;
+    }
+    
+    // 执行真实API请求
     const response = await this.axiosInstance.delete<ApiResponse<T>>(url, config);
     return response.data;
   }

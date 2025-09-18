@@ -79,6 +79,15 @@ class ConfigService {
    */
   public async getAppConfig(forceRefresh = false): Promise<AppConfig | null> {
     try {
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock app config');
+        }
+        return await mockService.mockGetAppConfig(ENV_CONFIG.APP_KEY);
+      }
+
       // Check cache first if not forcing refresh
       if (!forceRefresh) {
         const cachedConfig = await this.getCachedAppConfig();
@@ -186,6 +195,15 @@ class ConfigService {
    */
   public async getRiskConfig(forceRefresh = false): Promise<RiskConfig | null> {
     try {
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock risk config');
+        }
+        return await mockService.mockGetRiskConfig(ENV_CONFIG.APP_KEY);
+      }
+
       // Check cache first if not forcing refresh
       if (!forceRefresh) {
         const cachedConfig = await this.getCachedRiskConfig();
@@ -235,6 +253,15 @@ class ConfigService {
    */
   public async getChannelConfig(forceRefresh = false): Promise<ChannelConfigResponse | null> {
     try {
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock channel config');
+        }
+        return await mockService.mockGetChannelConfig(ENV_CONFIG.APP_KEY);
+      }
+
       // Check cache first if not forcing refresh
       if (!forceRefresh) {
         const cachedConfig = await this.getCachedChannelConfig();

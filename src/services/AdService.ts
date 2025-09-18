@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import mockService from './MockService';
 import { 
   AdType, 
   AdRequest, 
@@ -40,6 +41,18 @@ class AdService {
     try {
       if (ENV_CONFIG.DEBUG_MODE) {
         console.log('AdService.requestAd:', request);
+      }
+
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock ad request');
+        }
+        return await mockService.mockAdRequest(
+          request.userId, 
+          request.adType || AdType.REWARD_VIDEO
+        );
       }
 
       const response = await apiClient.post<AdResponse>(`${this.baseUrl}/request`, {
@@ -142,6 +155,15 @@ class AdService {
         console.log('AdService.reportAdShow:', request);
       }
 
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock ad show report');
+        }
+        return await mockService.mockAdShow(request.userId, request.adId, request.adType);
+      }
+
       await apiClient.post(`${this.baseUrl}/show`, {
         userId: request.userId,
         appKey: request.appKey,
@@ -202,6 +224,21 @@ class AdService {
     try {
       if (ENV_CONFIG.DEBUG_MODE) {
         console.log('AdService.reportAdComplete:', request);
+      }
+
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock ad complete report');
+        }
+        return await mockService.mockAdComplete(
+          request.userId, 
+          request.adId, 
+          request.adType, 
+          request.playDuration, 
+          request.isClicked === '1'
+        );
       }
 
       const response = await apiClient.post<number>(`${this.baseUrl}/complete`, {
@@ -336,6 +373,15 @@ class AdService {
     try {
       if (ENV_CONFIG.DEBUG_MODE) {
         console.log('AdService.getUserRevenue:', userId);
+      }
+
+      // Check if mock mode is enabled
+      const isMockMode = mockService.isMockModeEnabled();
+      if (isMockMode) {
+        if (ENV_CONFIG.DEBUG_MODE) {
+          console.log('Using mock user revenue');
+        }
+        return await mockService.mockGetRevenue(userId);
       }
 
       const response = await apiClient.get<RevenueData>(`${this.baseUrl}/revenue`, {

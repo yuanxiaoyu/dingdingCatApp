@@ -10,6 +10,14 @@ export interface EnvConfig {
   MOCK_USER_STATE: 0 | 1; // 0: 未登录, 1: 登录状态
 }
 
+// 尝试读取配置文件
+let appSettings: any = {};
+try {
+  appSettings = require('./appSettings.json');
+} catch (error) {
+  console.warn('无法读取appSettings.json，使用默认配置');
+}
+
 // Helper function to safely get environment variables
 const getEnvVar = (key: string, defaultValue?: string): string | undefined => {
   try {
@@ -26,14 +34,14 @@ const getEnvVar = (key: string, defaultValue?: string): string | undefined => {
 
 // Development environment configuration
 const developmentConfig: EnvConfig = {
-  API_BASE_URL: 'https://dev-api.dingdingcat.com',
+  API_BASE_URL: appSettings.api?.baseUrl || 'https://dev-api.dingdingcat.com',
   WECHAT_APP_ID: 'wx_dev_app_id', // Replace with actual WeChat App ID - using placeholder for development
   APP_KEY: 'dev_app_key', // Replace with actual App Key - using placeholder for development
-  DEBUG_MODE: true,
-  LOG_LEVEL: 'debug',
-  // Mock configuration - 可以通过环境变量覆盖
-  MOCK_ENABLED: getEnvVar('MOCK_ENABLED') === '1' || true, // 默认开启Mock
-  MOCK_USER_STATE: (getEnvVar('MOCK_USER_STATE') === '0' ? 0 : 1) as 0 | 1, // 默认登录状态
+  DEBUG_MODE: appSettings.debug?.enabled ?? true,
+  LOG_LEVEL: appSettings.debug?.logLevel || 'debug',
+  // Mock configuration - 优先使用配置文件，然后是环境变量
+  MOCK_ENABLED: appSettings.mockMode?.enabled ?? (getEnvVar('MOCK_ENABLED') === '1' || true),
+  MOCK_USER_STATE: (appSettings.mockMode?.userState ?? (getEnvVar('MOCK_USER_STATE') === '0' ? 0 : 1)) as 0 | 1,
 };
 
 // Production environment configuration
