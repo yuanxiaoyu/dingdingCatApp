@@ -58,7 +58,7 @@ const MainTabs: React.FC = () => {
           borderTopWidth: 1,
           borderTopColor: '#E8E8E8',
           paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          paddingTop: 8,
+          paddingTop: 0,
           height: Platform.OS === 'ios' ? 85 : 65,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },

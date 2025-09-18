@@ -19,6 +19,16 @@ import CustomSplashScreen from './src/components/CustomSplashScreen';
 import { InitializationResult } from './src/services/InitializationService';
 import appFlowManager, { AppFlowState, AppFlowResult } from './src/services/AppFlowManager';
 
+// 开发环境工具导入
+if (__DEV__) {
+  require('./src/utils/validatePangleConfig');
+  require('./src/utils/testSplashAd');
+  require('./src/utils/testPangleIntegration');
+  require('./src/utils/debugAppFlow');
+  require('./src/utils/testSplashAdFix');
+  require('./src/utils/testPangleDirectly');
+}
+
 // App initialization states
 enum AppState {
   SPLASH_SCREEN = 'SPLASH_SCREEN',
@@ -59,18 +69,26 @@ function App() {
         setFlowResult(flow);
 
         // Set app state based on flow result
+        console.log('App: Setting app state based on flow result:', flow.state);
         switch (flow.state) {
           case AppFlowState.SPLASH_AD:
+            console.log('App: Setting state to SPLASH_AD');
             setAppState(AppState.SPLASH_AD);
             break;
           case AppFlowState.LOGIN_REQUIRED:
+            console.log('App: Setting state to READY (LOGIN_REQUIRED)');
+            setAppState(AppState.READY);
+            break;
           case AppFlowState.MAIN_APP:
+            console.log('App: Setting state to READY (MAIN_APP)');
             setAppState(AppState.READY);
             break;
           case AppFlowState.ERROR:
+            console.log('App: Setting state to ERROR');
             setAppState(AppState.ERROR);
             break;
           default:
+            console.log('App: Setting state to READY (default)');
             setAppState(AppState.READY);
         }
 
@@ -232,6 +250,7 @@ function App() {
 
   // Show splash ad screen if needed
   if (appState === AppState.SPLASH_AD && flowResult?.shouldShowSplashAd && flowResult.userId) {
+    console.log('App: Rendering SplashAdScreen with userId:', flowResult.userId);
     return (
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor="#000000" />

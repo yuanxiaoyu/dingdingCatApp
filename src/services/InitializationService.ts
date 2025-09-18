@@ -5,6 +5,8 @@ import deviceService from './DeviceService';
 import riskControlService from './RiskControlService';
 import syncService from './SyncService';
 import mockService from './MockService';
+import PangleAdService from './PangleAdService';
+import AdConfig from '../config/adConfig.js';
 import { ENV_CONFIG } from '../config/env';
 
 // Storage keys for initialization tracking
@@ -98,6 +100,10 @@ class InitializationService {
       // Phase 2: Configuration loading
       await this.updateStatus(InitPhase.CONFIG_LOADING, 30, '加载应用配置...');
       result.hasConfigUpdates = await this.initializeConfigurations();
+
+      // Phase 2.5: Initialize Pangle SDK
+      await this.updateStatus(InitPhase.CONFIG_LOADING, 40, '初始化广告SDK...');
+      await this.initializePangleSDK();
 
       // Phase 3: Device information collection
       await this.updateStatus(InitPhase.DEVICE_INFO, 50, '收集设备信息...');
@@ -346,6 +352,42 @@ class InitializationService {
       console.error('Offline sync initialization failed:', error);
       // Don't fail initialization if sync fails
       return false;
+    }
+  }
+
+  /**
+   * Initialize Pangle SDK
+   */
+  private async initializePangleSDK(): Promise<void> {
+    try {
+      console.log('Initializing Pangle SDK...');
+      
+      // Get app ID from config
+      const appId = AdConfig.appId;
+      console.log('Using Pangle App ID:', appId);
+      
+      // Initialize and start SDK
+      await PangleAdService.initializeAndStartSDK(appId);
+      
+      // Verify SDK is ready
+      const isInitialized = await PangleAdService.isSDKInitialized();
+      const isStarted = await PangleAdService.isSDKStarted();
+      
+      console.log('Pangle SDK initialization status:', {
+        initialized: isInitialized,
+        started: isStarted,
+      });
+      
+      if (!isInitialized || !isStarted) {
+        throw new Error('Pangle SDK failed to initialize properly');
+      }
+      
+      console.log('Pangle SDK initialized successfully');
+      
+    } catch (error) {
+      console.error('Pangle SDK initialization failed:', error);
+      // Don't fail the entire initialization if SDK fails
+      // The app can still work without ads
     }
   }
 

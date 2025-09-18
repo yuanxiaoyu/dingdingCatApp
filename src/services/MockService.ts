@@ -208,12 +208,15 @@ class MockService {
   }
 
   /**
-   * Get mock ad configuration
+   * Get mock ad configuration using Pangle test IDs
    */
   public async getMockAdConfig(): Promise<AdConfig> {
+    // Import Pangle test configuration
+    const PangleAdConfig = require('../config/adConfig.js').default;
+    
     return {
       appKey: ENV_CONFIG.APP_KEY,
-      configVersion: '1.0.0-mock',
+      configVersion: '1.0.0-pangle-test',
       adInterval: 30, // 30 seconds between ads
       singleRewardLimit: 100, // 1 yuan max per ad
       dailyRewardVideoLimit: 50,
@@ -221,25 +224,25 @@ class MockService {
       adTypeConfig: 'splash,video,interstitial,banner',
       splashAdConfig: {
         enabled: true,
-        adId: 'mock_splash_ad_id',
+        adId: PangleAdConfig.splashAdId, // 使用穿山甲测试ID: 102117864
         timeout: 5000,
         skipDelay: 3000,
       },
       rewardVideoAdConfig: {
         enabled: true,
-        adId: 'mock_video_ad_id',
+        adId: PangleAdConfig.rewardVideoAdId, // 使用穿山甲测试ID: 945700410
         minPlayDuration: 15,
         rewardAmount: 50,
       },
       interstitialAdConfig: {
         enabled: true,
-        adId: 'mock_interstitial_ad_id',
+        adId: PangleAdConfig.interstitialAdId, // 使用穿山甲测试ID: 945493675
         showInterval: 60,
         rewardAmount: 20,
       },
       bannerAdConfig: {
         enabled: true,
-        adId: 'mock_banner_ad_id',
+        adId: PangleAdConfig.bannerAdId, // 使用穿山甲测试ID: 945493677
         position: 'bottom',
         autoRefresh: true,
         refreshInterval: 30,
