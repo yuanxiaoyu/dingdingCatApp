@@ -351,7 +351,7 @@ export async function runAllExamples(): Promise<void> {
   await exampleAdSkipFlow(userId);
   await exampleBatchReporting(userId);
   await exampleGetRevenue(userId);
-  await exampleGetAdHistory(userId);
+
   await exampleErrorHandling(userId);
 
   console.log('✅ All AdService examples completed!');
@@ -365,7 +365,7 @@ export {
   exampleAdSkipFlow,
   exampleBatchReporting,
   exampleGetRevenue,
-  exampleGetAdHistory,
+
   exampleErrorHandling,
   exampleUtilityFunctions,
 };

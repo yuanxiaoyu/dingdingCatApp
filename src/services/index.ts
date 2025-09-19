@@ -16,3 +16,13 @@ export { default as secureStorageService, SecureStorageService } from './SecureS
 export { default as cacheService, CacheService } from './CacheService';
 export { default as databaseService, DatabaseService } from './DatabaseService';
 export { default as persistenceService, PersistenceService } from './PersistenceService';
+
+// Music Services
+export { MusicDataService } from './MusicDataService';
+export { MusicPlayerService } from './MusicPlayerService';
+export { MusicFavoritesService } from './MusicFavoritesService';
+
+// Performance and Optimization Services
+export { AudioCacheService } from './AudioCacheService';
+export { AnimationService } from './AnimationService';
+export { PerformanceMonitorService } from './PerformanceMonitorService';

@@ -130,7 +130,6 @@ describe('Task 16: Navigation and Routing Configuration', () => {
         'LoginScreen',
         'HomeScreen', 
         'RevenueScreen',
-        'HistoryScreen',
         'SettingsScreen'
       ];
       

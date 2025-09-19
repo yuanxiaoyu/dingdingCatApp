@@ -36,12 +36,7 @@ jest.mock('../../screens/RevenueScreen', () => {
   };
 });
 
-jest.mock('../../screens/HistoryScreen', () => {
-  const { Text } = require('react-native');
-  return function MockHistoryScreen() {
-    return <Text testID="history-screen">History Screen</Text>;
-  };
-});
+
 
 jest.mock('../../screens/SettingsScreen', () => {
   const { Text } = require('react-native');

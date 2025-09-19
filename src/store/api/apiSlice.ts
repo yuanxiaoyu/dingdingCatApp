@@ -20,8 +20,7 @@ import {
   AdCloseRequest,
   BatchReportRequest,
   RevenueData,
-  AdHistoryRequest,
-  AdHistoryResponse,
+
   DeviceInfo,
   DeviceReportResponse
 } from '../../types';
@@ -102,7 +101,6 @@ export const apiSlice = createApi({
     'ChannelConfig',
     'Ad',
     'Revenue',
-    'History',
     'Device'
   ],
   endpoints: (builder) => ({
@@ -233,22 +231,7 @@ export const apiSlice = createApi({
       providesTags: ['Revenue'],
     }),
 
-    getAdHistory: builder.query<ApiResponse<AdHistoryResponse>, AdHistoryRequest>({
-      query: (params) => {
-        const searchParams = new URLSearchParams();
-        searchParams.append('userId', params.userId.toString());
-        searchParams.append('appKey', params.appKey);
-        
-        if (params.pageNum) searchParams.append('pageNum', params.pageNum.toString());
-        if (params.pageSize) searchParams.append('pageSize', params.pageSize.toString());
-        if (params.adType) searchParams.append('adType', params.adType);
-        if (params.startDate) searchParams.append('startDate', params.startDate);
-        if (params.endDate) searchParams.append('endDate', params.endDate);
-        
-        return `/ad/history?${searchParams.toString()}`;
-      },
-      providesTags: ['History'],
-    }),
+
 
     // Device endpoints
     reportDeviceInfo: builder.mutation<ApiResponse<DeviceReportResponse>, DeviceInfo>({
@@ -292,8 +275,6 @@ export const {
   useBatchReportAdsMutation,
   useGetUserRevenueQuery,
   useLazyGetUserRevenueQuery,
-  useGetAdHistoryQuery,
-  useLazyGetAdHistoryQuery,
 
   // Device hooks
   useReportDeviceInfoMutation,

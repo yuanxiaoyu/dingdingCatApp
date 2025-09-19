@@ -14,7 +14,7 @@ import {
   AdShowRequest,
   AdCompleteRequest,
   RevenueData,
-  AdHistoryResponse,
+
   DeviceInfo 
 } from '../types';
 
@@ -214,28 +214,7 @@ export class AdExamples {
     }
   }
 
-  /**
-   * Example: Get Ad History
-   */
-  static async getAdHistory(
-    userId: number, 
-    pageNum: number = 1, 
-    pageSize: number = 20,
-    adType?: string
-  ): Promise<AdHistoryResponse> {
-    try {
-      let url = `/ad/history?userId=${userId}&pageNum=${pageNum}&pageSize=${pageSize}`;
-      if (adType) {
-        url += `&adType=${adType}`;
-      }
 
-      const response = await apiClient.get<AdHistoryResponse>(url);
-      return response.data;
-    } catch (error) {
-      console.error('Get ad history failed:', error);
-      throw error;
-    }
-  }
 
   /**
    * Example: Batch Report (for offline sync)

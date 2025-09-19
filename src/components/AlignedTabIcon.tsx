@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 interface AlignedTabIconProps {
-  name: 'home' | 'history' | 'settings';
+  name: 'home' | 'settings';
   focused: boolean;
   color: string;
   size?: number;
@@ -17,7 +17,6 @@ const AlignedTabIcon: React.FC<AlignedTabIconProps> = ({ name, focused, color, s
   const getIcon = (iconName: string): string => {
     const icons = {
       home: '⌂',      // House symbol
-      history: '⧗',    // Hourglass
       settings: '⚙',   // Gear
     };
     

@@ -7,6 +7,8 @@ import authReducer from './slices/authSlice';
 import configReducer from './slices/configSlice';
 import adReducer from './slices/adSlice';
 import syncReducer from './slices/syncSlice';
+import musicReducer from './slices/musicSlice';
+import favoritesReducer from './slices/favoritesSlice';
 import { apiSlice } from './api/apiSlice';
 
 // Configure the Redux store
@@ -17,6 +19,8 @@ export const store = configureStore({
     config: configReducer,
     ad: adReducer,
     sync: syncReducer,
+    music: musicReducer,
+    favorites: favoritesReducer,
     // RTK Query API slice
     [apiSlice.reducerPath]: apiSlice.reducer,
   },

@@ -61,7 +61,6 @@ The navigation system integrates with Redux store for:
 ### Main Screens
 - `HomeScreen`: Main dashboard with ad buttons
 - `RevenueScreen`: Revenue statistics and charts
-- `HistoryScreen`: Ad watching history with filters
 - `SettingsScreen`: User settings and app configuration
 
 ## Navigation Props

@@ -19,6 +19,8 @@ import CustomSplashScreen from './src/components/CustomSplashScreen';
 import { InitializationResult } from './src/services/InitializationService';
 import appFlowManager, { AppFlowState, AppFlowResult } from './src/services/AppFlowManager';
 import authService from './src/services/AuthService';
+import { MusicPlayerService } from './src/services/MusicPlayerService';
+import { PerformanceMonitorService } from './src/services/PerformanceMonitorService';
 
 // 开发环境工具导入
 if (__DEV__) {
@@ -116,6 +118,20 @@ function App() {
 
     // 立即设置状态栏样式
     StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content', true);
+    
+    // 初始化性能监控
+    PerformanceMonitorService.startMonitoring();
+    
+    // 初始化音乐播放服务
+    MusicPlayerService.initialize().catch(error => {
+      console.error('Failed to initialize MusicPlayerService:', error);
+    });
+    
+    // 应用退出时的清理
+    return () => {
+      PerformanceMonitorService.stopMonitoring();
+      MusicPlayerService.cleanup();
+    };
   }, [isDarkMode]);
 
   /**

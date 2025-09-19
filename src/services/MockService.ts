@@ -9,7 +9,7 @@ import {
   ChannelConfigResponse,
   AdResponse,
   RevenueData,
-  AdHistoryResponse,
+
   AdType
 } from '../types';
 
@@ -358,45 +358,7 @@ class MockService {
     };
   }
 
-  /**
-   * Get mock ad history
-   */
-  public async getMockAdHistory(pageNum: number = 1, pageSize: number = 20): Promise<AdHistoryResponse> {
-    const totalRecords = 86;
-    const totalPages = Math.ceil(totalRecords / pageSize);
-    
-    // Generate mock history items
-    const items = [];
-    const startIndex = (pageNum - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, totalRecords);
 
-    for (let i = startIndex; i < endIndex; i++) {
-      const adTypes = Object.values(AdType);
-      const adType = adTypes[i % adTypes.length];
-      const date = new Date();
-      date.setHours(date.getHours() - i);
-
-      items.push({
-        id: `history_${i + 1}`,
-        adId: `mock_${adType}_${i + 1}`,
-        adType,
-        adTitle: `模拟${this.getAdTypeDisplayName(adType)}广告`,
-        playTime: date.toISOString(),
-        playDuration: this.getMockPlayDuration(adType),
-        rewardAmount: this.getMockRewardAmount(adType),
-        isCompleted: Math.random() > 0.1, // 90% completion rate
-        isClicked: Math.random() > 0.7, // 30% click rate
-      });
-    }
-
-    return {
-      pageNum,
-      pageSize,
-      totalRecords,
-      totalPages,
-      items,
-    };
-  }
 
   /**
    * Simulate network delay for mock responses
@@ -784,45 +746,7 @@ class MockService {
     };
   }
 
-  /**
-   * 模拟广告历史接口 (/ad/history)
-   */
-  public async mockGetAdHistory(userId: number, pageNum: number = 1, pageSize: number = 20): Promise<AdHistoryResponse> {
-    await this.simulateNetworkDelay(400, 800);
-    
-    const total = 156;
-    const historyList = [];
-    
-    for (let i = 0; i < Math.min(pageSize, total - (pageNum - 1) * pageSize); i++) {
-      const adTypes = [AdType.SPLASH, AdType.REWARD_VIDEO, AdType.INTERSTITIAL, AdType.BANNER];
-      const adType = adTypes[Math.floor(Math.random() * adTypes.length)];
-      const isCompleted = Math.random() > 0.2;
-      const isClicked = Math.random() > 0.7;
-      const playDuration = adType === AdType.REWARD_VIDEO ? 30 : Math.floor(Math.random() * 10) + 5;
-      
-      historyList.push({
-        statId: 1000 + i + (pageNum - 1) * pageSize,
-        adId: `AD_${Date.now()}_${i}`,
-        adType: adType,
-        playDuration: playDuration,
-        isClicked: isClicked,
-        isSkipped: !isCompleted,
-        isCompleted: isCompleted,
-        stayDuration: playDuration + Math.floor(Math.random() * 5),
-        rewardAmount: isCompleted ? (adType === AdType.REWARD_VIDEO ? 0.05 : 0.01) : 0,
-        playTime: new Date(Date.now() - Math.random() * 7 * 24 * 3600000).toISOString(),
-        deviceType: 'android',
-        statusDescription: isCompleted ? '完播' : '跳过',
-      });
-    }
-    
-    return {
-      total: total,
-      pageNum: pageNum,
-      pageSize: pageSize,
-      historyList: historyList,
-    };
-  }
+
 
   /**
    * 模拟设备信息上报接口 (/user/device)

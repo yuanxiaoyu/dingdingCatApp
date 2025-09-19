@@ -3,6 +3,8 @@ export { default as authReducer } from './authSlice';
 export { default as configReducer } from './configSlice';
 export { default as adReducer } from './adSlice';
 export { default as syncReducer } from './syncSlice';
+export { default as musicReducer } from './musicSlice';
+export { default as favoritesReducer } from './favoritesSlice';
 
 // Export actions with prefixes to avoid conflicts
 export { 
@@ -47,10 +49,9 @@ export {
 } from './configSlice';
 
 export { 
-  setAdData,
+  setCurrentAd,
   setRevenueData,
-  setHistory,
-  clearAdData,
+  clearCurrentAd,
   clearError as clearAdError,
   setLoading as setAdLoading,
   // Async thunks
@@ -61,13 +62,18 @@ export {
   reportAdSkip,
   reportAdClose,
   fetchUserRevenue,
-  fetchAdHistory,
+  playAdComplete,
   // Selectors
-  selectAdData,
+  selectAd,
+  selectCurrentAd,
   selectRevenueData,
-  selectHistory,
   selectAdLoading,
-  selectAdError
+  selectAdError,
+  selectTodayRevenue,
+  selectTotalRevenue,
+  selectTodayWatchCount,
+  selectTotalWatchCount,
+  selectRemainingWatchCount
 } from './adSlice';
 
 export { 
@@ -86,3 +92,59 @@ export {
   selectSyncStatus,
   selectLastSyncTime
 } from './syncSlice';
+
+export {
+  // Actions
+  clearError as clearMusicError,
+  togglePlaybackPanel,
+  setPlaybackPanelVisible,
+  updatePlayingTracks,
+  // Async thunks
+  loadMusicData,
+  playMusic,
+  pauseAllMusic,
+  resumeAllMusic,
+  stopAllMusic,
+  setTrackVolume,
+  setMasterVolume,
+  toggleGlobalPlayback,
+  // Selectors
+  selectMusicState,
+  selectMusicList,
+  selectMusicCategories,
+  selectPlayingTracks,
+  selectIsPlaying,
+  selectMasterVolume,
+  selectShowPlaybackPanel,
+  selectMusicLoading,
+  selectMusicError,
+  selectIsTrackPlaying,
+  selectTrackVolume,
+  selectMusicByCategory
+} from './musicSlice';
+
+export {
+  // Actions
+  clearError as clearFavoritesError,
+  resetLoadingState as resetFavoritesLoadingState,
+  addFavoriteLocally,
+  removeFavoriteLocally,
+  // Async thunks
+  loadFavorites,
+  addToFavorites,
+  removeFromFavorites,
+  toggleFavorite,
+  clearAllFavorites,
+  checkIsFavorited,
+  // Selectors
+  selectFavoritesState,
+  selectFavorites,
+  selectFavoritesLoading,
+  selectFavoritesError,
+  selectIsAddingFavorite,
+  selectIsRemovingFavorite,
+  selectIsFavorited,
+  selectFavoriteById,
+  selectFavoritesByCategory,
+  selectFavoritesCount
+} from './favoritesSlice';

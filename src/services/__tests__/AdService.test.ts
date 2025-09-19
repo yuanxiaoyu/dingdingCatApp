@@ -1,6 +1,6 @@
 import adService, { AdService } from '../AdService';
 import apiClient from '../apiClient';
-import { AdType, AdRequest, AdResponse, RevenueData, AdHistoryResponse } from '../../types';
+import { AdType, AdRequest, AdResponse, RevenueData } from '../../types';
 import { ENV_CONFIG } from '../../config/env';
 
 // Mock the apiClient
@@ -436,58 +436,7 @@ describe('AdService', () => {
       expect(result).toEqual(mockRevenueData);
     });
 
-    it('should get ad history', async () => {
-      const mockHistoryResponse: AdHistoryResponse = {
-        total: 156,
-        pageNum: 1,
-        pageSize: 20,
-        historyList: [
-          {
-            statId: 1001,
-            adId: 'AD_123',
-            adType: AdType.REWARD_VIDEO,
-            playDuration: 30,
-            isClicked: true,
-            isSkipped: false,
-            isCompleted: true,
-            stayDuration: 35,
-            rewardAmount: 0.015,
-            playTime: '2024-01-01T10:30:00Z',
-            deviceType: 'android',
-            statusDescription: '完播',
-          },
-        ],
-      };
 
-      mockedApiClient.get.mockResolvedValue({
-        code: 200,
-        message: 'Success',
-        data: mockHistoryResponse,
-        timestamp: Date.now(),
-      });
-
-      const result = await adService.getAdHistory({
-        userId: 1001,
-        appKey: 'test_app_key',
-        pageNum: 1,
-        pageSize: 20,
-        adType: AdType.REWARD_VIDEO,
-      });
-
-      expect(mockedApiClient.get).toHaveBeenCalledWith('/ad/history', {
-        params: {
-          userId: 1001,
-          appKey: 'test_app_key',
-          pageNum: 1,
-          pageSize: 20,
-          adType: AdType.REWARD_VIDEO,
-          startDate: undefined,
-          endDate: undefined,
-        },
-      });
-
-      expect(result).toEqual(mockHistoryResponse);
-    });
   });
 
   describe('convenience methods', () => {

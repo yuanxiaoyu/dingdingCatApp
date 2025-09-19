@@ -29,7 +29,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
   const [status, setStatus] = useState<InitializationStatus>({
     phase: InitPhase.STARTING,
     progress: 0,
-    message: '正在启动应用...',
+    message: '资源加载中...',
   });
 
   useEffect(() => {
@@ -76,16 +76,16 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
 
   const getPhaseMessage = (phase: InitPhase): string => {
     const messages = {
-      [InitPhase.STARTING]: '正在启动应用...',
-      [InitPhase.AUTH_CHECK]: '检查用户认证状态...',
-      [InitPhase.CONFIG_LOADING]: '加载应用配置...',
-      [InitPhase.DEVICE_INFO]: '收集设备信息...',
-      [InitPhase.RISK_CONTROL]: '初始化风控系统...',
-      [InitPhase.OFFLINE_SYNC]: '同步离线数据...',
-      [InitPhase.COMPLETED]: '初始化完成',
-      [InitPhase.FAILED]: '初始化失败',
+      [InitPhase.STARTING]: '资源加载中...',
+      [InitPhase.AUTH_CHECK]: '资源加载中...',
+      [InitPhase.CONFIG_LOADING]: '资源加载中...',
+      [InitPhase.DEVICE_INFO]: '资源加载中...',
+      [InitPhase.RISK_CONTROL]: '资源加载中...',
+      [InitPhase.OFFLINE_SYNC]: '资源加载中...',
+      [InitPhase.COMPLETED]: '欢迎体验自然音乐',
+      [InitPhase.FAILED]: '加载失败，请重试',
     };
-    return messages[phase] || '正在处理...';
+    return messages[phase] || '资源加载中...';
   };
 
   const getProgressColor = (): string => {
@@ -109,7 +109,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
           />
         </View>
         <Text style={styles.appName}>丁丁猫</Text>
-        <Text style={styles.appSubtitle}>广告收益管理</Text>
+        <Text style={styles.appSubtitle}>自然音乐体验</Text>
       </View>
 
       {/* 进度区域 */}
@@ -158,7 +158,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
       {/* 页脚 */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          正在为您准备最佳体验...
+          正在为您准备自然音乐之旅...
         </Text>
       </View>
     </View>

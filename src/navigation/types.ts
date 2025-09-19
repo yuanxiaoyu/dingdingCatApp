@@ -20,7 +20,6 @@ export type AuthStackParamList = {
 // Main Tab Navigator Parameters
 export type MainTabParamList = {
   Home: undefined;
-  History: undefined;
   Settings: undefined;
 };
 

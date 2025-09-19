@@ -3,16 +3,12 @@ import {
   AdState, 
   AdResponse, 
   RevenueData, 
-  AdHistoryItem, 
-  AdHistoryResponse,
   AdRequest,
   AdShowRequest,
   AdClickRequest,
   AdCompleteRequest,
   AdSkipRequest,
-  AdCloseRequest,
-  AdHistoryRequest,
-  AdType 
+  AdCloseRequest
 } from '../../types';
 import adService from '../../services/AdService';
 
@@ -20,7 +16,6 @@ import adService from '../../services/AdService';
 const initialState: AdState = {
   currentAd: null,
   revenueData: null,
-  history: [],
   isLoading: false,
   error: null,
 };
@@ -110,29 +105,7 @@ export const fetchUserRevenue = createAsyncThunk(
   }
 );
 
-export const fetchAdHistory = createAsyncThunk(
-  'ad/fetchAdHistory',
-  async (request: AdHistoryRequest, { rejectWithValue }) => {
-    try {
-      const response = await adService.getAdHistory(request);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch ad history');
-    }
-  }
-);
 
-export const loadMoreHistory = createAsyncThunk(
-  'ad/loadMoreHistory',
-  async (request: AdHistoryRequest, { rejectWithValue }) => {
-    try {
-      const response = await adService.getAdHistory(request);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load more history');
-    }
-  }
-);
 
 // Helper thunk for complete ad flow (request -> show -> complete)
 export const playAdComplete = createAsyncThunk(
@@ -207,18 +180,7 @@ const adSlice = createSlice({
     setRevenueData: (state, action: PayloadAction<RevenueData>) => {
       state.revenueData = action.payload;
     },
-    addHistoryItem: (state, action: PayloadAction<AdHistoryItem>) => {
-      state.history.unshift(action.payload);
-    },
-    updateHistoryItem: (state, action: PayloadAction<{ id: number; updates: Partial<AdHistoryItem> }>) => {
-      const index = state.history.findIndex(item => item.statId === action.payload.id);
-      if (index !== -1) {
-        state.history[index] = { ...state.history[index], ...action.payload.updates };
-      }
-    },
-    clearHistory: (state) => {
-      state.history = [];
-    },
+
     clearCurrentAd: (state) => {
       state.currentAd = null;
     },
@@ -331,38 +293,7 @@ const adSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Fetch Ad History
-    builder
-      .addCase(fetchAdHistory.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchAdHistory.fulfilled, (state, action: PayloadAction<AdHistoryResponse>) => {
-        state.isLoading = false;
-        state.history = action.payload.historyList;
-        state.error = null;
-      })
-      .addCase(fetchAdHistory.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      });
 
-    // Load More History
-    builder
-      .addCase(loadMoreHistory.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(loadMoreHistory.fulfilled, (state, action: PayloadAction<AdHistoryResponse>) => {
-        state.isLoading = false;
-        // Append new history items
-        state.history = [...state.history, ...action.payload.historyList];
-        state.error = null;
-      })
-      .addCase(loadMoreHistory.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      });
 
     // Play Ad Complete Flow
     builder
@@ -395,9 +326,6 @@ const adSlice = createSlice({
 export const { 
   setCurrentAd, 
   setRevenueData, 
-  addHistoryItem, 
-  updateHistoryItem, 
-  clearHistory, 
   clearCurrentAd, 
   clearError, 
   setLoading 
@@ -407,7 +335,6 @@ export const {
 export const selectAd = (state: { ad: AdState }) => state.ad;
 export const selectCurrentAd = (state: { ad: AdState }) => state.ad.currentAd;
 export const selectRevenueData = (state: { ad: AdState }) => state.ad.revenueData;
-export const selectAdHistory = (state: { ad: AdState }) => state.ad.history;
 export const selectAdLoading = (state: { ad: AdState }) => state.ad.isLoading;
 export const selectAdError = (state: { ad: AdState }) => state.ad.error;
 
@@ -418,15 +345,7 @@ export const selectTodayWatchCount = (state: { ad: AdState }) => state.ad.revenu
 export const selectTotalWatchCount = (state: { ad: AdState }) => state.ad.revenueData?.totalWatchCount || 0;
 export const selectRemainingWatchCount = (state: { ad: AdState }) => state.ad.revenueData?.remainingWatchCount || 0;
 
-// Filter selectors
-export const selectHistoryByType = (adType: AdType) => (state: { ad: AdState }) => 
-  state.ad.history.filter(item => item.adType === adType);
 
-export const selectHistoryByDateRange = (startDate: string, endDate: string) => (state: { ad: AdState }) =>
-  state.ad.history.filter(item => {
-    const itemDate = new Date(item.playTime).toISOString().split('T')[0];
-    return itemDate >= startDate && itemDate <= endDate;
-  });
 
 // Export reducer
 export default adSlice.reducer;

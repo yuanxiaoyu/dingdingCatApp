@@ -65,7 +65,7 @@ class InitializationService {
   private currentStatus: InitializationStatus = {
     phase: InitPhase.STARTING,
     progress: 0,
-    message: '正在启动应用...',
+    message: '资源加载中...',
   };
 
   /**
@@ -97,31 +97,31 @@ class InitializationService {
       }
 
       // Phase 1: Authentication check
-      await this.updateStatus(InitPhase.AUTH_CHECK, 10, '检查用户认证状态...');
+      await this.updateStatus(InitPhase.AUTH_CHECK, 10, '资源加载中...');
       result.isAuthenticated = await this.initializeAuthentication();
 
       // Phase 2: Configuration loading
-      await this.updateStatus(InitPhase.CONFIG_LOADING, 30, '加载应用配置...');
+      await this.updateStatus(InitPhase.CONFIG_LOADING, 30, '资源加载中...');
       result.hasConfigUpdates = await this.initializeConfigurations();
 
       // Phase 2.5: Initialize Pangle SDK
-      await this.updateStatus(InitPhase.CONFIG_LOADING, 40, '初始化广告SDK...');
+      await this.updateStatus(InitPhase.CONFIG_LOADING, 40, '资源加载中...');
       await this.initializePangleSDK();
 
       // Phase 3: Device information collection
-      await this.updateStatus(InitPhase.DEVICE_INFO, 50, '收集设备信息...');
+      await this.updateStatus(InitPhase.DEVICE_INFO, 50, '资源加载中...');
       result.deviceInfoReported = await this.initializeDeviceInfo(result.isAuthenticated);
 
       // Phase 4: Risk control initialization
-      await this.updateStatus(InitPhase.RISK_CONTROL, 70, '初始化风控系统...');
+      await this.updateStatus(InitPhase.RISK_CONTROL, 70, '资源加载中...');
       await this.initializeRiskControl();
 
       // Phase 5: Offline data synchronization
-      await this.updateStatus(InitPhase.OFFLINE_SYNC, 90, '同步离线数据...');
+      await this.updateStatus(InitPhase.OFFLINE_SYNC, 90, '资源加载中...');
       result.offlineDataSynced = await this.initializeOfflineSync();
 
       // Completed
-      await this.updateStatus(InitPhase.COMPLETED, 100, '初始化完成');
+      await this.updateStatus(InitPhase.COMPLETED, 100, '欢迎体验自然音乐');
       result.success = true;
 
       // Update initialization tracking
@@ -143,7 +143,7 @@ class InitializationService {
       await this.updateStatus(
         InitPhase.FAILED,
         this.currentStatus.progress,
-        '初始化失败',
+        '加载失败，请重试',
         error.message || '未知错误'
       );
 

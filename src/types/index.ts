@@ -331,42 +331,7 @@ export interface RevenueData {
   singleRevenueAmount?: number; // Single revenue amount per completion
 }
 
-export interface AdHistoryItem {
-  id?: string;
-  statId?: number;
-  adId: string;
-  adType: AdType;
-  adTitle?: string;
-  playDuration: number;
-  isClicked: boolean;
-  isSkipped: boolean;
-  isCompleted: boolean;
-  stayDuration?: number;
-  rewardAmount: number;
-  playTime: string;
-  deviceType?: string;
-  statusDescription?: string;
-}
 
-export interface AdHistoryResponse {
-  total?: number;
-  totalRecords?: number;
-  totalPages?: number;
-  pageNum: number;
-  pageSize: number;
-  historyList?: AdHistoryItem[];
-  items?: AdHistoryItem[];
-}
-
-export interface AdHistoryRequest {
-  userId: number;
-  appKey: string;
-  pageNum?: number;
-  pageSize?: number;
-  adType?: AdType;
-  startDate?: string;
-  endDate?: string;
-}
 
 // Device Information Types
 export interface DeviceInfo {
@@ -471,7 +436,6 @@ export interface ConfigState {
 export interface AdState {
   currentAd: AdResponse | null;
   revenueData: RevenueData | null;
-  history: AdHistoryItem[];
   isLoading: boolean;
   error: string | null;
 }
@@ -482,3 +446,6 @@ export interface SyncState {
   lastSyncTime: number;
   error: string | null;
 }
+
+// Music Types - re-export from music types
+export * from './music';

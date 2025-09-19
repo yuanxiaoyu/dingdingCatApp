@@ -25,7 +25,6 @@ export const useChannelConfig = () => useAppSelector((state) => state.config.cha
 // Specific ad hooks
 export const useCurrentAd = () => useAppSelector((state) => state.ad.currentAd);
 export const useRevenueData = () => useAppSelector((state) => state.ad.revenueData);
-export const useAdHistory = () => useAppSelector((state) => state.ad.history);
 
 // Specific sync hooks
 export const useOfflineQueue = () => useAppSelector((state) => state.sync.offlineQueue);

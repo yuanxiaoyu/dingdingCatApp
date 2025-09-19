@@ -11,8 +11,6 @@ import {
   AdCloseRequest,
   BatchReportRequest,
   RevenueData,
-  AdHistoryResponse,
-  AdHistoryRequest,
   ApiResponse,
   ApiError
 } from '../types';
@@ -25,7 +23,7 @@ import { ENV_CONFIG } from '../config/env';
  * - Requesting ads from the server
  * - Reporting ad events (show, click, complete, skip, close)
  * - Batch reporting for offline data sync
- * - Retrieving user revenue and history data
+ * - Retrieving user revenue data
  */
 class AdService {
   private readonly baseUrl = '/ad';
@@ -426,40 +424,7 @@ class AdService {
     }
   }
 
-  /**
-   * Get user ad watching history with optional filtering
-   * 
-   * @param request - History request parameters
-   * @returns Promise<AdHistoryResponse> - Paginated history data
-   */
-  public async getAdHistory(request: AdHistoryRequest): Promise<AdHistoryResponse> {
-    try {
-      if (ENV_CONFIG.DEBUG_MODE) {
-        console.log('AdService.getAdHistory:', request);
-      }
 
-      const response = await apiClient.get<AdHistoryResponse>(`${this.baseUrl}/history`, {
-        params: {
-          userId: request.userId,
-          appKey: request.appKey,
-          pageNum: request.pageNum || 1,
-          pageSize: request.pageSize || 20,
-          adType: request.adType,
-          startDate: request.startDate,
-          endDate: request.endDate,
-        },
-      });
-
-      if (ENV_CONFIG.DEBUG_MODE) {
-        console.log('AdService.getAdHistory response:', response.data);
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error('AdService.getAdHistory error:', error);
-      throw this.handleError(error, 'Failed to get ad history');
-    }
-  }
 
   /**
    * Convenience method to report ad show with current timestamp

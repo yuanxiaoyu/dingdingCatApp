@@ -33,7 +33,7 @@ const API_MOCK_MAPPING = {
   'POST:/ad/close': 'mockAdClose',
   'POST:/ad/batchReport': 'mockBatchReport',
   'GET:/ad/revenue': 'mockGetUserRevenue',
-  'GET:/ad/history': 'mockGetAdHistory',
+
   
   // 设备相关
   'POST:/user/device': 'mockReportDevice',

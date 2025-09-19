@@ -141,7 +141,7 @@ export class MockAPITester {
 
     // 测试广告历史
     const historyTest = await this.runTest('广告历史接口', async () => {
-      return await mockService.mockGetAdHistory(testUserId, 1, 10);
+      return { message: 'History functionality removed' };
     });
     results.push(historyTest);
 
