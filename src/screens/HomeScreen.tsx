@@ -39,6 +39,7 @@ import { ENV_CONFIG } from '../config/env';
 import IntegratedAdService, { AdEventCallbacks } from '../services/IntegratedAdService';
 import DevTools from '../components/DevTools';
 import SimpleDevToolsIcon from '../components/SimpleDevToolsIcon';
+import BannerAdComponent from '../components/BannerAdComponent';
 import Icon from '../assets/images/mipmap-mdpi_ic_launcher.png';
 
 
@@ -135,7 +136,7 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   // Create ad event callbacks
-  const createAdCallbacks = useCallback((adType: AdType): AdEventCallbacks => ({
+  const createAdCallbacks = useCallback((adType: AdType, fallbackTimeoutRef?: { current: NodeJS.Timeout | null }): AdEventCallbacks => ({
     onAdLoaded: (adId: string, adType: AdType) => {
       console.log(`Ad loaded: ${adType} - ${adId}`);
       updateAdButtonState(adType, 'playing');
@@ -152,6 +153,13 @@ const HomeScreen: React.FC = () => {
 
     onAdCompleted: (adId: string, adType: AdType, reward: number) => {
       console.log(`Ad completed: ${adType} - ${adId}, reward: ${reward}`);
+      
+      // Clear fallback timeout if it exists
+      if (fallbackTimeoutRef?.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+      
       setLoadingAdType(null);
       updateAdButtonState(adType, 'idle');
 
@@ -165,6 +173,13 @@ const HomeScreen: React.FC = () => {
 
     onAdSkipped: (adId: string, adType: AdType) => {
       console.log(`Ad skipped: ${adType} - ${adId}`);
+      
+      // Clear fallback timeout if it exists
+      if (fallbackTimeoutRef?.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+      
       setLoadingAdType(null);
       updateAdButtonState(adType, 'idle');
       Alert.alert('广告已跳过', '您跳过了广告播放');
@@ -172,12 +187,26 @@ const HomeScreen: React.FC = () => {
 
     onAdClosed: (adId: string, adType: AdType) => {
       console.log(`Ad closed: ${adType} - ${adId}`);
+      
+      // Clear fallback timeout if it exists
+      if (fallbackTimeoutRef?.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+      
       setLoadingAdType(null);
       updateAdButtonState(adType, 'idle');
     },
 
     onAdError: (adId: string, adType: AdType, error: Error) => {
       console.error(`Ad error: ${adType} - ${adId}:`, error);
+      
+      // Clear fallback timeout if it exists
+      if (fallbackTimeoutRef?.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+      
       setLoadingAdType(null);
       updateAdButtonState(adType, 'idle');
       Alert.alert(
@@ -188,7 +217,21 @@ const HomeScreen: React.FC = () => {
     },
   }), [loadUserRevenue, updateAdButtonState]);
 
+  // Handle banner ad click
+  const handleBannerAdClick = useCallback((adData: any) => {
+    console.log('Banner ad clicked:', adData);
+    Alert.alert(
+      '广告点击',
+      `您点击了Banner广告！\n广告ID: ${adData.adId}`,
+      [{ text: '确定', onPress: () => loadUserRevenue() }]
+    );
+  }, [loadUserRevenue]);
 
+  // Handle banner ad error
+  const handleBannerAdError = useCallback((error: Error) => {
+    console.error('Banner ad error:', error);
+    // 静默处理Banner广告错误，不影响用户体验
+  }, []);
 
   // Handle ad button press with integrated service
   const handleAdButtonPress = useCallback(async (adType: AdType) => {
@@ -211,7 +254,18 @@ const HomeScreen: React.FC = () => {
 
     setLoadingAdType(adType);
     updateAdButtonState(adType, 'loading');
-    const callbacks = createAdCallbacks(adType);
+    
+    // Create a ref to hold the fallback timeout
+    const fallbackTimeoutRef = { current: null as NodeJS.Timeout | null };
+    const callbacks = createAdCallbacks(adType, fallbackTimeoutRef);
+
+    // Add a fallback timeout to reset button state in case callbacks don't work
+    fallbackTimeoutRef.current = setTimeout(() => {
+      console.log(`Fallback: Resetting ${adType} button state after timeout`);
+      setLoadingAdType(null);
+      updateAdButtonState(adType, 'idle');
+      fallbackTimeoutRef.current = null;
+    }, 30000); // 30 seconds timeout
 
     try {
       switch (adType) {
@@ -230,6 +284,13 @@ const HomeScreen: React.FC = () => {
       }
     } catch (error: any) {
       console.error(`Failed to load ${adType} ad:`, error);
+      
+      // Clear fallback timeout on error
+      if (fallbackTimeoutRef.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+      
       setLoadingAdType(null);
       updateAdButtonState(adType, 'idle');
       Alert.alert(
@@ -284,14 +345,14 @@ const HomeScreen: React.FC = () => {
           <View style={styles.headerCircle2} />
           <View style={styles.headerCircle3} />
         </View>
-        
+
         <View style={styles.headerContent}>
           <View style={styles.titleContainer}>
             <Text style={styles.appTitle}>丁丁猫</Text>
             <View style={styles.titleUnderline} />
           </View>
         </View>
-        
+
         {/* Dev Tools Button (Debug Mode Only) - Hidden but accessible */}
         {ENV_CONFIG.DEBUG_MODE && (
           <TouchableOpacity
@@ -316,7 +377,12 @@ const HomeScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-
+        {/* Banner Ad - 顶部横幅广告 */}
+        <BannerAdComponent
+          userId={user.userId}
+          onAdClick={handleBannerAdClick}
+          onAdError={handleBannerAdError}
+        />
 
         {/* User Information Card */}
         <View style={styles.userCard}>
@@ -331,7 +397,7 @@ const HomeScreen: React.FC = () => {
                 <Text style={styles.todayRevenueUnit}>次</Text>
               </View>
             </View>
-            
+
             <View style={styles.userActions}>
               <TouchableOpacity style={styles.userActionButton}>
                 {/* <Text style={styles.userActionIcon}>📊</Text> */}
@@ -339,7 +405,7 @@ const HomeScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
-          
+
           {/* User Stats Row */}
           <View style={styles.userStatsRow}>
             <View style={styles.userStatItem}>
@@ -439,7 +505,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  
+
   // Header Styles
   header: {
     backgroundColor: '#FFFFFF',
@@ -537,7 +603,7 @@ const styles = StyleSheet.create({
     height: 20,
     backgroundColor: 'transparent',
   },
-  
+
   scrollView: {
     flex: 1,
   },
@@ -582,7 +648,7 @@ const styles = StyleSheet.create({
   userCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginTop: 20,
+    marginTop: 10,
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },

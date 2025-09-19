@@ -17,6 +17,7 @@ import authService from '../services/AuthService';
 import { LoginResponse } from '../types';
 
 const { width } = Dimensions.get('window');
+import Icon from '../assets/images/mipmap-mdpi_ic_launcher.png';
 
 const LoginScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -69,12 +70,8 @@ const LoginScreen: React.FC = () => {
           '请先安装微信客户端后再进行登录',
           [
             {
-              text: '重新检测',
-              onPress: checkWeChatAvailability,
-            },
-            {
-              text: '取消',
-              style: 'cancel',
+              text: '确定',
+              style: 'default',
             },
           ]
         );
@@ -83,7 +80,7 @@ const LoginScreen: React.FC = () => {
 
       // Use AuthService directly for WeChat login
       const result: LoginResponse = await authService.wechatLogin();
-      
+
       if (result) {
         // Update Redux state with login result
         dispatch(setUser({
@@ -108,17 +105,17 @@ const LoginScreen: React.FC = () => {
         }));
 
         dispatch(setLoading(false));
-        
+
         // Login successful - the useEffect will handle navigation
         console.log('Login successful:', result.userName);
       }
     } catch (error: any) {
       dispatch(setLoading(false));
       console.error('Login error:', error);
-      
+
       // Show user-friendly error message
       let errorMessage = '登录失败，请重试';
-      
+
       if (typeof error === 'string') {
         if (error.includes('WeChat is not installed')) {
           errorMessage = '请先安装微信客户端';
@@ -147,37 +144,22 @@ const LoginScreen: React.FC = () => {
   };
 
   const renderWeChatButton = () => {
-    if (isCheckingWeChat) {
-      return (
-        <TouchableOpacity style={[styles.wechatButton, styles.disabledButton]} disabled>
-          <ActivityIndicator size="small" color="#FFFFFF" />
-          <Text style={styles.wechatButtonText}>检测微信中...</Text>
-        </TouchableOpacity>
-      );
-    }
-
-    if (!isWeChatAvailable) {
-      return (
-        <TouchableOpacity 
-          style={[styles.wechatButton, styles.disabledButton]} 
-          onPress={checkWeChatAvailability}
-        >
-          <Text style={styles.wechatButtonText}>微信未安装 - 点击重新检测</Text>
-        </TouchableOpacity>
-      );
-    }
-
     return (
       <TouchableOpacity
         style={styles.wechatButton}
         onPress={handleWeChatLogin}
-        disabled={isLoading}
+        disabled={isLoading || isCheckingWeChat}
         activeOpacity={0.8}
       >
         {isLoading ? (
           <>
             <ActivityIndicator size="small" color="#FFFFFF" style={styles.buttonIcon} />
             <Text style={styles.wechatButtonText}>登录中...</Text>
+          </>
+        ) : isCheckingWeChat ? (
+          <>
+            <ActivityIndicator size="small" color="#FFFFFF" style={styles.buttonIcon} />
+            <Text style={styles.wechatButtonText}>微信登录</Text>
           </>
         ) : (
           <>
@@ -197,7 +179,7 @@ const LoginScreen: React.FC = () => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.retryButton}
           onPress={() => dispatch(clearError())}
         >
@@ -210,38 +192,39 @@ const LoginScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1E88E5" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoPlaceholder}>
-          <Text style={styles.logoText}>丁</Text>
+          {/* <Text style={styles.logoText}>丁</Text> */}
+          <Image source={Icon} />
         </View>
         <Text style={styles.appTitle}>丁丁猫</Text>
-        <Text style={styles.appSubtitle}>广告收益管理</Text>
+        {/* <Text style={styles.appSubtitle}>广告收益管理</Text> */}
       </View>
 
       {/* Main Content */}
       <View style={styles.content}>
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeTitle}>欢迎使用丁丁猫</Text>
-          <Text style={styles.welcomeDescription}>
+          {/* <Text style={styles.welcomeDescription}>
             通过观看广告获得收益{'\n'}
             安全可靠的收益管理平台
-          </Text>
+          </Text> */}
         </View>
 
         {/* Login Section */}
         <View style={styles.loginSection}>
           {renderWeChatButton()}
-          
+
           {renderErrorMessage()}
-          
-          <Text style={styles.loginHint}>
+
+          {/* <Text style={styles.loginHint}>
             使用微信登录即表示同意{'\n'}
             <Text style={styles.linkText}>《用户协议》</Text>
             和
             <Text style={styles.linkText}>《隐私政策》</Text>
-          </Text>
+          </Text> */}
         </View>
       </View>
 

@@ -466,7 +466,7 @@ const SplashAdScreen: React.FC<SplashAdScreenProps> = ({
 
       // Cleanup and complete
       cleanup();
-      
+
       console.log('SplashAdScreen: Calling onAdComplete callback');
       onAdComplete();
 
@@ -634,7 +634,7 @@ const SplashAdScreen: React.FC<SplashAdScreenProps> = ({
           />
         ) : (
           <View style={styles.placeholderAd}>
-            <Text style={styles.placeholderText}>广告展示中...</Text>
+            <Text style={styles.placeholderText}>加载中...</Text>
           </View>
         )}
 

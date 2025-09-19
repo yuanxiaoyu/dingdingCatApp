@@ -18,6 +18,7 @@ import SplashAdScreen from './src/components/SplashAdScreen';
 import CustomSplashScreen from './src/components/CustomSplashScreen';
 import { InitializationResult } from './src/services/InitializationService';
 import appFlowManager, { AppFlowState, AppFlowResult } from './src/services/AppFlowManager';
+import authService from './src/services/AuthService';
 
 // 开发环境工具导入
 if (__DEV__) {
@@ -29,7 +30,7 @@ if (__DEV__) {
   require('./src/utils/testPangleDirectly');
 }
 
-// App initialization states
+// 应用初始化状态
 enum AppState {
   SPLASH_SCREEN = 'SPLASH_SCREEN',
   INITIALIZING = 'INITIALIZING',
@@ -38,6 +39,71 @@ enum AppState {
   ERROR = 'ERROR',
 }
 
+// 初始化屏幕包装器组件 - 检查登录状态后决定是否显示初始化屏幕
+interface InitializationScreenWrapperProps {
+  isDarkMode: boolean;
+  onInitializationComplete: (result: InitializationResult) => void;
+}
+
+const InitializationScreenWrapper: React.FC<InitializationScreenWrapperProps> = ({
+  isDarkMode,
+  onInitializationComplete,
+}) => {
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        console.log('检查用户登录状态...');
+        const authenticated = await authService.isAuthenticated();
+        console.log('用户登录状态:', authenticated);
+        setIsAuthenticated(authenticated);
+      } catch (error) {
+        console.error('检查登录状态时出错:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
+  // 正在检查认证状态时显示加载
+  if (isCheckingAuth) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        {/* 可以显示一个简单的加载指示器 */}
+        <InitializationScreen onInitializationComplete={onInitializationComplete} />
+      </SafeAreaProvider>
+    );
+  }
+
+  // 已登录用户显示完整的初始化屏幕
+  if (isAuthenticated) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <InitializationScreen onInitializationComplete={onInitializationComplete} />
+      </SafeAreaProvider>
+    );
+  }
+
+  // 未登录用户直接进入主应用（通常会显示登录界面）
+  return (
+    <StoreProvider>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+          <RootNavigator />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </StoreProvider>
+  );
+};
+
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [appState, setAppState] = useState<AppState>(AppState.SPLASH_SCREEN);
@@ -45,30 +111,30 @@ function App() {
   const [flowResult, setFlowResult] = useState<AppFlowResult | null>(null);
 
   useEffect(() => {
-    // App startup logging
+    // 应用启动日志
     console.log('DingDingCat App starting...');
-    
-    // Set status bar style immediately
+
+    // 立即设置状态栏样式
     StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content', true);
   }, [isDarkMode]);
 
   /**
-   * Handle initialization completion
+   * 处理初始化完成
    */
   const handleInitializationComplete = async (result: InitializationResult) => {
     console.log('App initialization completed:', result);
-    
+
     setInitResult(result);
 
     if (result.success) {
-      // After successful initialization, determine app flow
+      // 初始化成功后，确定应用流程
       try {
         const flow = await appFlowManager.determineAppFlow();
         console.log('App flow determined:', flow);
-        
+
         setFlowResult(flow);
 
-        // Set app state based on flow result
+        // 根据流程结果设置应用状态
         console.log('App: Setting app state based on flow result:', flow.state);
         switch (flow.state) {
           case AppFlowState.SPLASH_AD:
@@ -92,7 +158,7 @@ function App() {
             setAppState(AppState.READY);
         }
 
-        // Log initialization summary
+        // 记录初始化摘要
         console.log('App initialization summary:', {
           duration: `${result.duration}ms`,
           isFirstLaunch: result.isFirstLaunch,
@@ -104,7 +170,7 @@ function App() {
           shouldShowSplashAd: flow.shouldShowSplashAd,
         });
 
-        // Show first launch welcome if needed (after splash ad)
+        // 如需要显示首次启动欢迎信息（在开屏广告后）
         if (result.isFirstLaunch && flow.state !== AppFlowState.SPLASH_AD) {
           setTimeout(() => {
             Alert.alert(
@@ -115,12 +181,12 @@ function App() {
           }, 1000);
         }
 
-        // Show config updates notification if needed
+        // 如需要显示配置更新通知
         if (result.hasConfigUpdates) {
           console.log('Configuration updates detected during startup');
         }
 
-        // Show offline sync notification if needed
+        // 如需要显示离线同步通知
         if (result.offlineDataSynced) {
           console.log('Offline data synchronized during startup');
         }
@@ -131,8 +197,8 @@ function App() {
       }
     } else {
       setAppState(AppState.ERROR);
-      
-      // Show error alert
+
+      // 显示错误提示
       Alert.alert(
         '应用启动失败',
         result.error || '应用初始化过程中发生错误，请重启应用重试。',
@@ -149,7 +215,7 @@ function App() {
             text: '退出',
             style: 'destructive',
             onPress: () => {
-              // In a real app, you might want to exit gracefully
+              // 在真实应用中，您可能希望优雅地退出
               console.log('User chose to exit after initialization failure');
             },
           },
@@ -159,17 +225,17 @@ function App() {
   };
 
   /**
-   * Handle splash ad completion
+   * 处理开屏广告完成
    */
   const handleSplashAdComplete = async () => {
     try {
       console.log('App: Splash ad completed');
-      
+
       const flow = await appFlowManager.handleSplashAdComplete();
       setFlowResult(flow);
       setAppState(AppState.READY);
 
-      // Show first launch welcome if needed
+      // 如需要显示首次启动欢迎信息
       if (initResult?.isFirstLaunch) {
         setTimeout(() => {
           Alert.alert(
@@ -187,12 +253,12 @@ function App() {
   };
 
   /**
-   * Handle splash ad skip
+   * 处理开屏广告跳过
    */
   const handleSplashAdSkip = async () => {
     try {
       console.log('App: Splash ad skipped');
-      
+
       const flow = await appFlowManager.handleSplashAdSkip();
       setFlowResult(flow);
       setAppState(AppState.READY);
@@ -204,12 +270,12 @@ function App() {
   };
 
   /**
-   * Handle splash ad error
+   * 处理开屏广告错误
    */
   const handleSplashAdError = async (error: Error) => {
     try {
       console.log('App: Splash ad error:', error.message);
-      
+
       const flow = await appFlowManager.handleSplashAdError(error);
       setFlowResult(flow);
       setAppState(AppState.READY);
@@ -221,14 +287,14 @@ function App() {
   };
 
   /**
-   * Handle custom splash screen completion
+   * 处理自定义启动屏幕完成
    */
   const handleSplashScreenComplete = () => {
     console.log('App: Custom splash screen completed');
     setAppState(AppState.INITIALIZING);
   };
 
-  // Show custom splash screen first
+  // 首先显示自定义启动屏幕
   if (appState === AppState.SPLASH_SCREEN) {
     return (
       <SafeAreaProvider>
@@ -238,17 +304,18 @@ function App() {
     );
   }
 
-  // Show initialization screen during startup
+
+  // 启动期间显示初始化屏幕（仅在已登录状态下显示）
   if (appState === AppState.INITIALIZING) {
     return (
-      <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <InitializationScreen onInitializationComplete={handleInitializationComplete} />
-      </SafeAreaProvider>
+      <InitializationScreenWrapper
+        isDarkMode={isDarkMode}
+        onInitializationComplete={handleInitializationComplete}
+      />
     );
   }
 
-  // Show splash ad screen if needed
+  // 如需要显示开屏广告屏幕
   if (appState === AppState.SPLASH_AD && flowResult?.shouldShowSplashAd && flowResult.userId) {
     console.log('App: Rendering SplashAdScreen with userId:', flowResult.userId);
     return (
@@ -264,7 +331,7 @@ function App() {
     );
   }
 
-  // Show main app after successful initialization
+  // 初始化成功后显示主应用
   return (
     <StoreProvider>
       <SafeAreaProvider>

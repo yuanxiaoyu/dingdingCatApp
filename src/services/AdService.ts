@@ -626,12 +626,29 @@ class AdService {
   }
 
   /**
-   * Get all supported ad types (excluding Banner)
+   * Request banner ad specifically
+   * 
+   * @param userId - User ID
+   * @param channelCode - Optional channel code
+   * @returns Promise<AdResponse> - Banner ad content
+   */
+  public async requestBannerAd(userId: number, channelCode?: string): Promise<AdResponse> {
+    return this.requestAd({
+      userId,
+      appKey: ENV_CONFIG.APP_KEY,
+      adType: AdType.BANNER,
+      channelCode,
+      deviceType: 'android', // TODO: Get from device info
+    });
+  }
+
+  /**
+   * Get all supported ad types (including Banner)
    * 
    * @returns AdType[] - Array of supported ad types
    */
   public getSupportedAdTypes(): AdType[] {
-    return [AdType.SPLASH, AdType.REWARD_VIDEO, AdType.INTERSTITIAL];
+    return [AdType.SPLASH, AdType.REWARD_VIDEO, AdType.INTERSTITIAL, AdType.BANNER];
   }
 
   /**

@@ -277,7 +277,7 @@ const HistoryScreen: React.FC = () => {
 
   // History Item Component
   const HistoryItem: React.FC<HistoryItemProps> = ({ item, onPress }) => (
-    <TouchableOpacity style={styles.historyItem} onPress={() => onPress(item)}>
+    <View style={styles.historyItem}>
       <View style={styles.itemHeader}>
         <View style={styles.itemTypeContainer}>
           <Text style={styles.itemType}>{getAdTypeDisplayName(item.adType)}</Text>
@@ -310,16 +310,9 @@ const HistoryScreen: React.FC = () => {
           </View>
         </View>
         
-        <View style={styles.itemActions}>
-          {item.isClicked && (
-            <View style={styles.actionBadge}>
-              <Text style={styles.actionText}>已点击</Text>
-            </View>
-          )}
-          <Text style={styles.viewDetail}>查看详情 {'>'}</Text>
-        </View>
+
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   // Filter Modal Component
@@ -547,22 +540,24 @@ const HistoryScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Header with App Title */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>观看历史</Text>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setShowFilterModal(true)}
-        >
-          <Text style={styles.filterButtonText}>筛选</Text>
-        </TouchableOpacity>
+        {/* Header Background Pattern */}
+        <View style={styles.headerBackground}>
+          <View style={styles.headerCircle1} />
+          <View style={styles.headerCircle2} />
+          <View style={styles.headerCircle3} />
+        </View>
+        
+        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.appTitle}>丁丁猫</Text>
+            <View style={styles.titleUnderline} />
+          </View>
+        </View>
       </View>
 
-      {/* Filter Summary */}
-      <View style={styles.filterSummary}>
-        <Text style={styles.filterSummaryText}>{filterSummaryText}</Text>
-        <Text style={styles.filterSummaryCount}>共 {history.length} 条记录</Text>
-      </View>
+
 
       {/* History List */}
       <FlatList
@@ -635,49 +630,81 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F7FA',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  headerTitle: {
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.03,
+  },
+  headerCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#3B82F6',
+    top: -40,
+    left: -20,
+  },
+  headerCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#10B981',
+    top: -10,
+    right: -10,
+  },
+  headerCircle3: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F59E0B',
+    bottom: -20,
+    left: '50%',
+    marginLeft: -30,
+  },
+  headerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  appTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '600',
+    color: '#1E293B',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
-  filterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1890FF',
+  titleUnderline: {
+    width: 24,
+    height: 2,
+    backgroundColor: '#3B82F6',
+    borderRadius: 1,
+    marginTop: 4,
   },
-  filterButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  filterSummary: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  filterSummaryText: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  filterSummaryCount: {
-    fontSize: 12,
-    color: '#999999',
-  },
+
+
   listContent: {
     paddingVertical: 8,
   },
@@ -779,25 +806,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333333',
   },
-  itemActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  actionBadge: {
-    backgroundColor: '#E6F7FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  actionText: {
-    fontSize: 12,
-    color: '#1890FF',
-  },
-  viewDetail: {
-    fontSize: 12,
-    color: '#1890FF',
-  },
+
 
   // Empty State
   emptyContainer: {

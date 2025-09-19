@@ -144,126 +144,24 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Header with App Title */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>设置</Text>
+        {/* Header Background Pattern */}
+        <View style={styles.headerBackground}>
+          <View style={styles.headerCircle1} />
+          <View style={styles.headerCircle2} />
+          <View style={styles.headerCircle3} />
+        </View>
+        
+        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.appTitle}>丁丁猫</Text>
+            <View style={styles.titleUnderline} />
+          </View>
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* User Profile Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>用户信息</Text>
-          
-          <View style={styles.profileCard}>
-            <View style={styles.profileHeader}>
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>
-                  {user?.nickName?.charAt(0) || '用'}
-                </Text>
-              </View>
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{user?.nickName || '未知用户'}</Text>
-                <Text style={styles.profileId}>ID: {user?.userId}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.profileStats}>
-              <View style={styles.profileStatItem}>
-                <Text style={styles.profileStatValue}>
-                  {lastSyncTime ? new Date(lastSyncTime).toLocaleDateString() : '未同步'}
-                </Text>
-                <Text style={styles.profileStatLabel}>最后同步</Text>
-              </View>
-              <View style={styles.profileStatDivider} />
-              <View style={styles.profileStatItem}>
-                <Text style={styles.profileStatValue}>{offlineQueueCount}</Text>
-                <Text style={styles.profileStatLabel}>待同步</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Account Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>账户设置</Text>
-          <View style={styles.settingGroup}>
-            <SettingItem
-              title="个人信息"
-              subtitle="查看和编辑个人资料"
-              showArrow
-              onPress={() => Alert.alert('提示', '个人信息编辑功能将在后续版本中实现')}
-            />
-            <SettingItem
-              title="收益设置"
-              subtitle="收益提现和税务设置"
-              showArrow
-              onPress={() => Alert.alert('提示', '收益设置功能将在后续版本中实现')}
-            />
-            <SettingItem
-              title="隐私设置"
-              subtitle="数据隐私和权限管理"
-              showArrow
-              onPress={() => Alert.alert('提示', '隐私设置功能将在后续版本中实现')}
-            />
-          </View>
-        </View>
-
-        {/* App Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>应用设置</Text>
-          <View style={styles.settingGroup}>
-            <SettingItem
-              title="推送通知"
-              subtitle="接收广告和收益通知"
-              showSwitch
-              switchValue={true}
-              onSwitchChange={(value) => {
-                Alert.alert('提示', `推送通知已${value ? '开启' : '关闭'}`);
-              }}
-            />
-            <SettingItem
-              title="自动同步"
-              subtitle="自动同步离线数据"
-              showSwitch
-              switchValue={true}
-              onSwitchChange={(value) => {
-                Alert.alert('提示', `自动同步已${value ? '开启' : '关闭'}`);
-              }}
-            />
-            <SettingItem
-              title="数据使用"
-              subtitle="移动网络下的数据使用设置"
-              showArrow
-              onPress={() => Alert.alert('提示', '数据使用设置功能将在后续版本中实现')}
-            />
-          </View>
-        </View>
-
-        {/* System Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>系统设置</Text>
-          <View style={styles.settingGroup}>
-            <SettingItem
-              title="清除缓存"
-              subtitle="清除应用缓存数据"
-              showArrow
-              onPress={handleClearCache}
-            />
-            <SettingItem
-              title="检查更新"
-              subtitle="检查应用更新"
-              showArrow
-              onPress={() => Alert.alert('提示', '当前已是最新版本')}
-            />
-            <SettingItem
-              title="意见反馈"
-              subtitle="提交问题和建议"
-              showArrow
-              onPress={() => Alert.alert('提示', '意见反馈功能将在后续版本中实现')}
-            />
-          </View>
-        </View>
-
         {/* Help & Support */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>帮助与支持</Text>
@@ -295,12 +193,6 @@ const SettingsScreen: React.FC = () => {
             <Text style={styles.logoutButtonText}>退出登录</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>丁丁猫 v1.0.0</Text>
-          <Text style={styles.footerText}>安全 · 可靠 · 高效</Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -312,16 +204,78 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F7FA',
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  headerTitle: {
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.03,
+  },
+  headerCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#3B82F6',
+    top: -40,
+    left: -20,
+  },
+  headerCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#10B981',
+    top: -10,
+    right: -10,
+  },
+  headerCircle3: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F59E0B',
+    bottom: -20,
+    left: '50%',
+    marginLeft: -30,
+  },
+  headerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  appTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '600',
+    color: '#1E293B',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  titleUnderline: {
+    width: 24,
+    height: 2,
+    backgroundColor: '#3B82F6',
+    borderRadius: 1,
+    marginTop: 4,
   },
   scrollView: {
     flex: 1,

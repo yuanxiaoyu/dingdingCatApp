@@ -41,7 +41,7 @@ const developmentConfig: EnvConfig = {
   LOG_LEVEL: appSettings.debug?.logLevel || 'debug',
   // Mock configuration - 优先使用配置文件，然后是环境变量
   MOCK_ENABLED: appSettings.mockMode?.enabled ?? (getEnvVar('MOCK_ENABLED') === '1' || true),
-  MOCK_USER_STATE: (appSettings.mockMode?.userState ?? (getEnvVar('MOCK_USER_STATE') === '0' ? 0 : 1)) as 0 | 1,
+  MOCK_USER_STATE: (appSettings.mockMode?.userState ?? (getEnvVar('MOCK_USER_STATE') === '1' ? 1 : 0)) as 0 | 1,
 };
 
 // Production environment configuration

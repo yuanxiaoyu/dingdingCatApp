@@ -15,13 +15,13 @@ interface InitializationScreenProps {
 }
 
 /**
- * InitializationScreen - Shows app startup progress
+ * 初始化屏幕 - 显示应用启动进度
  * 
- * Displays initialization progress with:
- * - App logo
- * - Progress bar
- * - Status messages
- * - Error handling
+ * 显示初始化进度包括：
+ * - 应用图标
+ * - 进度条
+ * - 状态消息
+ * - 错误处理
  */
 const InitializationScreen: React.FC<InitializationScreenProps> = ({
   onInitializationComplete,
@@ -43,14 +43,14 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
 
     const startInitialization = async () => {
       try {
-        // Add status listener
+        // 添加状态监听器
         initializationService.addStatusListener(handleStatusUpdate);
 
-        // Start initialization
+        // 开始初始化
         const result = await initializationService.initialize();
 
         if (mounted) {
-          // Small delay to show completion
+          // 短暂延迟以显示完成状态
           setTimeout(() => {
             onInitializationComplete(result);
           }, 500);
@@ -100,7 +100,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* App Logo */}
+      {/* 应用图标 */}
       <View style={styles.logoContainer}>
         <View style={styles.logoPlaceholder}>
           <Image
@@ -112,9 +112,9 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
         <Text style={styles.appSubtitle}>广告收益管理</Text>
       </View>
 
-      {/* Progress Section */}
+      {/* 进度区域 */}
       <View style={styles.progressContainer}>
-        {/* Progress Bar */}
+        {/* 进度条 */}
         <View style={styles.progressBarContainer}>
           <View style={styles.progressBarBackground}>
             <View
@@ -130,7 +130,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
           <Text style={styles.progressText}>{status.progress}%</Text>
         </View>
 
-        {/* Status Message */}
+        {/* 状态消息 */}
         <View style={styles.statusContainer}>
           {status.phase !== InitPhase.FAILED && (
             <ActivityIndicator
@@ -147,7 +147,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
           </Text>
         </View>
 
-        {/* Error Details */}
+        {/* 错误详情 */}
         {status.error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{status.error}</Text>
@@ -155,7 +155,7 @@ const InitializationScreen: React.FC<InitializationScreenProps> = ({
         )}
       </View>
 
-      {/* Footer */}
+      {/* 页脚 */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
           正在为您准备最佳体验...
